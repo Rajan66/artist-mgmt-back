@@ -7,9 +7,8 @@ env.read_env()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = env("SECRET_KEY")
-print(SECRET_KEY)
 
-DEBUG = True
+DEBUG = False
 
 # Apps
 INSTALLED_APPS = [
@@ -104,9 +103,15 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 AUTH_USER_MODEL = "users.CustomUser"
 
-ALLOWED_HOST = []
+ALLOWED_HOSTS = ["*"]
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": ("authentication.helpers.JWTAuthentication",),
+    "EXCEPTION_HANDLER": "core.utils.utils.custom_exception_handler",
+    "NON_FIELD_ERRORS_KEY": "errors",
+}

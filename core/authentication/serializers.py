@@ -7,8 +7,20 @@ class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
-    def create(self, validated_data):
-        return User(**validated_data)
+    def validate(self, attrs):
+        email = attrs["email"]
+        password = attrs["password"]
+
+        user = User.objects.filter(email=email).first()
+
+        if not user:
+            raise serializers.ValidationError("Invalid crendentials.")
+
+        if not user.check_password(password):
+            raise serializers.ValidationError("Invalid password.")
+
+        attrs["user"] = user
+        return attrs
 
 
 class UserRegisterSerializer(serializers.Serializer):
