@@ -1,12 +1,10 @@
 from rest_framework import status
-from rest_framework.response import Response
+from users.models import CustomUser as User
 
-from authentication.helpers import JWTAuthentication as jwt
-from authentication.serializers import UserLoginSerializer
-
-
-def send_response(data, message: str, status: status):
-    return Response({"data": data, "message": message}, status=status)
+from authentication.exceptions import CustomAuthenticationException
+from authentication.helpers import JWTAuthentication
+from authentication.serializers import UserLoginSerializer, UserRegisterSerializer
+from core.utils.response import success_response
 
 
 class AuthService:
@@ -14,13 +12,16 @@ class AuthService:
         serializer = UserLoginSerializer(data=request.data)
 
         if not serializer.is_valid():
-            # throw exception here from django here
-            return send_response(
-                None, "something went wrong", status.HTTP_400_BAD_REQUEST
+            raise CustomAuthenticationException(
+                detail=serializer.errors,
+                error_type="Validation error",
+                code=status.HTTP_400_BAD_REQUEST,
             )
 
-        user = serializer.create(serializer.validated_data)
-        token = jwt.get_tokens(None, user)
+        user = serializer.validated_data["user"]
+
+        jwt_auth = JWTAuthentication()
+        token = jwt_auth.get_tokens(user)
         data = {
             "id": user.id,
             "email": user.email,
@@ -28,4 +29,27 @@ class AuthService:
             "refresh_token": token[1],
         }
 
-        return send_response(data, "login successful", status.HTTP_200_OK)
+        return success_response(data, "login successful", status.HTTP_200_OK)
+
+    def register(self, request):
+        serializer = UserRegisterSerializer(data=request.data)
+        if not serializer.is_valid():
+            raise CustomAuthenticationException(
+                detail=serializer.errors,
+                error_type="Authentication error",
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer.save()
+        data = serializer.data
+        user = User.objects.filter(email=data["email"]).first()
+        response_data = {
+            "id": user.id,
+            "email": user.email,
+        }
+
+        return success_response(
+            data=response_data,
+            message="Registration successful",
+            status=status.HTTP_201_CREATED,
+        )
