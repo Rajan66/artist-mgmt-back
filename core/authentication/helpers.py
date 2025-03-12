@@ -14,7 +14,11 @@ class JWTAuthentication(BaseAuthentication):
         if authorization:
             token = authorization.split(" ")[1]
         else:
-            return None
+            raise CustomAuthenticationException(
+                detail="Invalid token!",
+                code=status.HTTP_401_UNAUTHORIZED,
+                error_type="Authenication error",
+            )
 
         try:
             id = self.check_claims(token)
