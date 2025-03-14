@@ -2,4 +2,4 @@ from django.shortcuts import HttpResponse
 
 
 def index(request):
-    return HttpResponse("hello artist")
+    return HttpResponse("Hello world")
