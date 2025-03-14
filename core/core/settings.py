@@ -23,13 +23,16 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "rest_framework",
     "corsheaders",
+    "drf_yasg",
 ]
 
 CUSTOM_APPS = [
     "authentication",
     "users",
     "artists",
+    "songs",
 ]
+
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + CUSTOM_APPS
 
 MIDDLEWARE = [
