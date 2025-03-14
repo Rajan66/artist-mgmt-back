@@ -22,8 +22,16 @@ class UserListView(APIView):
 class UserDetailView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
+    user_service = UserService()
 
     def get(self, request, pk):
-        user_service = UserService()
-        response = user_service.get_user_v2(id=pk)
+        response = self.user_service.get_user(id=pk)
+        return response
+
+    def put(self, request, pk):
+        response = self.user_service.update(id=pk, payload=request.data)
+        return response
+
+    def delete(self, request, pk):
+        response = self.user_service.delete(id=pk)
         return response
