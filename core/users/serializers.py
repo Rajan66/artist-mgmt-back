@@ -9,4 +9,6 @@ class UserSerializer(serializers.Serializer):
     last_login = serializers.DateTimeField()
     date_joined = serializers.DateTimeField()
     updated_at = serializers.DateTimeField()
-    is_removed = serializers.BooleanField()
+    is_active = serializers.BooleanField()
+    is_staff = serializers.BooleanField()
+    is_superuser = serializers.BooleanField()

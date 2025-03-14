@@ -1,4 +1,7 @@
+import uuid
+
 from django.db import connection
+from django.utils import timezone
 from rest_framework import status
 from users.exceptions import CustomUserException
 from users.models import CustomUser as User
@@ -75,4 +78,48 @@ class UserService:
             data,
             message="Users found successfully",
             status=status.HTTP_200_OK,
+        )
+
+    def create(self, user: User):
+        id = uuid.uuid4()
+        email = user.get("email")
+        password = user.get("password")
+        role = user.get("role")
+        is_active = user.get("is_active") if user.get("is_active") else False
+        is_staff = user.get("is_staff") if user.get("is_staff") else False
+        is_superuser = user.get("is_superuser") if user.get("is_superuser") else False
+        date_joined = timezone.now()
+        updated_at = timezone.now()
+
+        with connection.cursor() as c:
+            c.execute(
+                """INSERT INTO users_customuser ("id", "email", "password", "role", "is_active", "is_staff", "is_superuser", "date_joined", "updated_at") values ( 
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING *;
+                """,
+                [
+                    id,
+                    email,
+                    password,
+                    role,
+                    is_active,
+                    is_staff,
+                    is_superuser,
+                    date_joined,
+                    updated_at,
+                ],
+            )
+
+            user = c.fetchone()
+            columns = []
+            for col in c.description:
+                columns.append(col[0])
+
+        user_dicts = dict(zip(columns, user))
+        serializer = UserSerializer(user_dicts)
+        data = serializer.data
+
+        return success_response(
+            data,
+            message="User created sucessfully",
+            status=status.HTTP_201_CREATED,
         )
