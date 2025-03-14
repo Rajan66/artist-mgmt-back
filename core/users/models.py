@@ -2,10 +2,10 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from users.managers import CustomUserManager
 
 from core.base.choices import RoleChoices
 from core.base.models import BaseModel, Profile
-from users.managers import CustomUserManager
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin, BaseModel):
@@ -35,9 +35,6 @@ class UserProfile(Profile):
         related_name="user",
         on_delete=models.CASCADE,
     )
-    first_name = models.CharField(_("first name"), blank=True)
-    last_name = models.CharField(_("last name"), blank=True)
-
     phone = models.CharField(
         max_length=20,
         blank=True,
@@ -47,6 +44,7 @@ class UserProfile(Profile):
     class Meta:
         verbose_name = "User Profile"
         verbose_name_plural = "User Profiles"
+        db_table = "users_user_profile"
 
     def __str__(self):
         if self.first_name and self.last_name:
