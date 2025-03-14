@@ -1,5 +1,7 @@
 from django.urls import path
 
-from .views import IndexView
+from .views import UserListView
 
-urlpatterns = [path("", IndexView.as_view(), name="index")]
+urlpatterns = [
+    path("", UserListView.as_view(), name="user-list"),
+]
