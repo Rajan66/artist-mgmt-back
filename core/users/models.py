@@ -14,11 +14,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin, BaseModel):
         choices=RoleChoices,
         default=RoleChoices.ARTIST,
     )
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
-    is_removed = models.BooleanField(default=False)
     created_at = None
-    is_staff = None
-    is_active = None
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
