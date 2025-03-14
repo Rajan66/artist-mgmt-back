@@ -11,5 +11,5 @@ class UserListView(APIView):
 
     def get(self, request):
         user_service = UserService()
-        response = user_service.list(request)
+        response = user_service.list()
         return response
