@@ -1,10 +1,10 @@
 from django.db import models
 from users.models import CustomUser as User
 
-from core.base.models import BaseModel, Profile
+from core.base.models import Profile
 
 
-class Artist(BaseModel, Profile):
+class Artist(Profile):
     user = models.OneToOneField(
         User,
         related_name="artist",
