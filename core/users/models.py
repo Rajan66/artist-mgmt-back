@@ -17,7 +17,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin, BaseModel):
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
-    is_removed = models.BooleanField(default=False)
     created_at = None
 
     USERNAME_FIELD = "email"

@@ -7,13 +7,15 @@ def success_response(
     message="Success",
     status=status.HTTP_200_OK,
 ):
-    return Response(
-        {
-            "data": data,
-            "message": message,
-        },
-        status=status,
-    )
+    if data:
+        return Response(
+            {
+                "data": data,
+                "message": message,
+            },
+            status=status,
+        )
+    return Response({"message": message}, status=status)
 
 
 def error_response(
