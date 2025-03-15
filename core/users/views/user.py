@@ -1,7 +1,7 @@
 from authentication.helpers import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-from users.services import UserService
+from users.services.user import UserService
 
 
 class UserListView(APIView):

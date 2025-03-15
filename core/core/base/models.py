@@ -21,7 +21,8 @@ class Profile(BaseModel):
     dob = models.DateTimeField(blank=True, null=True)  # add proper validation for this
     gender = models.CharField(
         choices=GenderChoices,
-        default=GenderChoices.MALE,
+        null=True,
+        blank=False,
     )
     address = models.CharField(
         max_length=255,
