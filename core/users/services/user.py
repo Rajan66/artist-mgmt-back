@@ -3,7 +3,9 @@ import uuid
 from django.db import DatabaseError, IntegrityError, connection
 from django.utils import timezone
 from rest_framework import status
+from users.models import CustomUser as User
 from users.serializers import UserSerializer
+from users.utils import create_profile
 
 from core.utils.response import error_response, success_response
 
@@ -94,9 +96,20 @@ class UserService:
 
             user_dicts = dict(zip(columns, result))
             serializer = UserSerializer(user_dicts)
+            user = serializer.data
+
+            if user.get("role") == "ARTIST":
+                # create an artist profile
+                pass
+            elif user.get("role") == "ARTIST_MANAGER" or "SUPER_ADMIN":
+                # create an user profile
+                print("yo")
+                create_profile(sender=User, created=True, artist=None, user=user)
+            else:
+                raise Exception("Invalid role. Please check the role again.")
 
             return success_response(
-                serializer.data,
+                user,
                 message="User created successfully",
                 status=status.HTTP_201_CREATED,
             )
@@ -113,6 +126,12 @@ class UserService:
                 error=str(e),
                 message="Database error",
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except Exception as e:
+            return error_response(
+                error=str(e),
+                message="User creation failed",
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
     def update(self, payload, id):
