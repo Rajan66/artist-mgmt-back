@@ -3,7 +3,6 @@ import uuid
 from django.db import DatabaseError, IntegrityError, connection
 from django.utils import timezone
 from rest_framework import status
-from users.models import CustomUser as User
 from users.serializers import UserSerializer
 from users.utils import create_profile
 
@@ -103,8 +102,7 @@ class UserService:
                 pass
             elif user.get("role") == "ARTIST_MANAGER" or "SUPER_ADMIN":
                 # create an user profile
-                print("yo")
-                create_profile(sender=User, created=True, artist=None, user=user)
+                create_profile(artist=None, user=user)
             else:
                 raise Exception("Invalid role. Please check the role again.")
 
