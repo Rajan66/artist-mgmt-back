@@ -12,3 +12,23 @@ class UserSerializer(serializers.Serializer):
     is_active = serializers.BooleanField()
     is_staff = serializers.BooleanField()
     is_superuser = serializers.BooleanField()
+
+
+class UserOutputSerializer(serializers.Serializer):
+    id = serializers.UUIDField(read_only=True)
+    email = serializers.EmailField()
+    role = serializers.CharField()
+    date_joined = serializers.DateTimeField()
+    updated_at = serializers.DateTimeField()
+    is_active = serializers.BooleanField()
+
+
+class UserProfileSerializer(serializers.Serializer):
+    id = serializers.UUIDField(read_only=True)
+    user = UserOutputSerializer()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    dob = serializers.DateTimeField()
+    gender = serializers.CharField()
+    address = serializers.CharField()
+    phone = serializers.CharField()

@@ -1,6 +1,8 @@
+from django.core.validators import MinValueValidator
 from django.db import models
 from users.models import CustomUser as User
 
+from artists.utils import current_year, max_value_current_year
 from core.base.models import Profile
 
 
@@ -11,7 +13,11 @@ class Artist(Profile):
         on_delete=models.CASCADE,
     )
     name = models.CharField(unique=True, verbose_name="artist name")
-    first_release_year = models.IntegerField(blank=True)
+    # no use, we have to validate in the services anyways
+    first_release_year = models.PositiveIntegerField(
+        default=current_year(),
+        validators=[MinValueValidator(1980), max_value_current_year],
+    )
     no_of_albums_released = models.PositiveIntegerField(default=0)
 
     class Meta:
