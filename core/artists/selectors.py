@@ -1,7 +1,7 @@
 from django.db import DatabaseError, connection
 
 
-def fetch_artists(self):
+def fetch_artists():
     try:
         with connection.cursor() as c:
             c.execute("SELECT * FROM artists_artist;")
