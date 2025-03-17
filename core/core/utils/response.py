@@ -15,7 +15,7 @@ def success_response(
             },
             status=status,
         )
-    return Response({"message": message}, status=status)
+    return Response({"data": [], "message": message}, status=status)
 
 
 def error_response(

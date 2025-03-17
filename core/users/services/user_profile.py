@@ -3,6 +3,7 @@ import uuid
 from django.db import DatabaseError, connection
 from django.utils import timezone
 from rest_framework import status
+from users.selectors import fetch_user, fetch_user_profiles
 from users.serializers import UserOutputSerializer, UserProfileSerializer
 
 from core.utils.response import error_response, success_response
@@ -11,37 +12,18 @@ from core.utils.response import error_response, success_response
 class UserProfileService:
     def get_profiles(self):
         try:
-            with connection.cursor() as c:
-                c.execute("SELECT * FROM users_user_profile")
-                results = c.fetchall()
+            profile_dicts = fetch_user_profiles()
 
-                columns = [col[0] for col in c.description]
-
-                profile_dicts = [dict(zip(columns, row)) for row in results]
-
-                for profile in profile_dicts:
-                    user_id = profile.get("user_id")
-                    # TODO move raw query code to selectors
-                    c.execute("SELECT * FROM users_customuser WHERE id=%s", [user_id])
-                    result = c.fetchone()
-
-                    if not result:
-                        return error_response(
-                            error="Invalid user ID",
-                            message="User not found",
-                            status=status.HTTP_404_NOT_FOUND,
-                        )
-
-                    columns = [col[0] for col in c.description]
-                    user_dicts = dict(zip(columns, result))
-                    serializer = UserOutputSerializer(user_dicts)
-                    profile["user"] = serializer.data
+            for profile in profile_dicts:
+                user_dicts = fetch_user(profile)
+                serializer = UserOutputSerializer(user_dicts)
+                profile["user"] = serializer.data
 
             serializer = UserProfileSerializer(profile_dicts, many=True)
             profiles = serializer.data
 
             return success_response(
-                profiles,
+                data=profiles,
                 message="User profiles found successfully",
                 status=status.HTTP_200_OK,
             )
@@ -136,23 +118,10 @@ class UserProfileService:
                     columns.append(col[0])
 
             profile_dicts = dict(zip(columns, result))
-            user_id = profile_dicts.get("user_id")
 
-            with connection.cursor() as c:
-                c.execute("SELECT * FROM users_customuser WHERE id=%s", [user_id])
-                result = c.fetchone()
-
-                if not result:
-                    return error_response(
-                        error="Invalid user ID",
-                        message="User not found",
-                        status=status.HTTP_404_NOT_FOUND,
-                    )
-
-                columns = [col[0] for col in c.description]
-                user_dicts = dict(zip(columns, result))
-                serializer = UserOutputSerializer(user_dicts)
-                profile_dicts["user"] = serializer.data
+            user_dicts = fetch_user(profile_dicts)
+            serializer = UserOutputSerializer(user_dicts)
+            profile_dicts["user"] = serializer.data
 
             serializer = UserProfileSerializer(profile_dicts)
             profile = serializer.data
@@ -185,7 +154,7 @@ class UserProfileService:
                 for col in c.description:
                     columns.append(col[0])
 
-                old_profile = dict(zip(columns, result))
+                old_profile = dict(zip(columns, result))  # TODO selectors till here
                 first_name = payload.get("first_name", old_profile.get("first_name"))
                 last_name = payload.get("last_name", old_profile.get("last_name"))
                 dob = payload.get("dob", old_profile.get("dob"))
@@ -219,21 +188,11 @@ class UserProfileService:
                     columns.append(col[0])
 
             profile_dicts = dict(zip(columns, result))
-            with connection.cursor() as c:
-                c.execute("SELECT * FROM users_customuser WHERE id=%s", [user_id])
-                result = c.fetchone()
+            # TODO verify if this works
 
-                if not result:
-                    return error_response(
-                        error="Invalid user ID",
-                        message="User not found",
-                        status=status.HTTP_404_NOT_FOUND,
-                    )
-
-                columns = [col[0] for col in c.description]
-                user_dicts = dict(zip(columns, result))
-                serializer = UserOutputSerializer(user_dicts)
-                profile_dicts["user"] = serializer.data
+            user_dicts = fetch_user(profile_dicts)
+            serializer = UserOutputSerializer(user_dicts)
+            profile_dicts["user"] = serializer.data
 
             serializer = UserProfileSerializer(profile_dicts)
             profile = serializer.data
