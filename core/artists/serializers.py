@@ -1,17 +1,17 @@
 from rest_framework import serializers
-from users.models import CustomUser as User
+from users.serializers import UserOutputSerializer
 
 
 class ArtistSerializer(serializers.Serializer):
     id = serializers.UUIDField(read_only=True)
-    user = serializers.PrimaryKeyRelatedField(
-        User,
-        queryset=User.objects.all(),
-        many=False,
-        read_only=False,
-    )  # TODO change this to use raw query
+    user = UserOutputSerializer()
     name = serializers.CharField()
     first_release_year = serializers.IntegerField()
     no_of_albums_released = serializers.IntegerField()
-    created_at = serializers.DateTimeField()
-    updated_at = serializers.DateTimeField(read_only=True)
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    dob = serializers.DateTimeField()
+    gender = serializers.CharField()
+    address = serializers.CharField()
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField()

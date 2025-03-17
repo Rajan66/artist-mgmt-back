@@ -1,5 +1,11 @@
-from django.shortcuts import HttpResponse
+from rest_framework.views import APIView
+
+from artists.services import ArtistService
+
+aritst_service = ArtistService()
 
 
-def index(request):
-    return HttpResponse("hello artist")
+class ArtistListView(APIView):
+    def get(self, request):
+        response = aritst_service.get_artists()
+        return response
