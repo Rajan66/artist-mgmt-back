@@ -17,3 +17,21 @@ def fetch_artists():
         raise Exception("Failed to fetch user profile")
 
     return artist_dicts
+
+
+def fetch_artist(id):
+    try:
+        with connection.cursor() as c:
+            c.execute("SELECT * FROM artists_artist WHERE id=%s", [id])
+            result = c.fetchone()
+
+            columns = []
+            for col in c.description:
+                columns.append(col[0])
+
+            artist_dict = dict(zip(columns, result))
+
+    except DatabaseError:
+        raise Exception("Failed to fetch user profile")
+
+    return artist_dict
