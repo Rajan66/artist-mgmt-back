@@ -25,7 +25,7 @@ urlpatterns = [
     path(f"{apiPrefix}/users/", include("users.urls")),
     path(f"{apiPrefix}/auth/", include("authentication.urls")),
     path(f"{apiPrefix}/artists/", include("artists.urls")),
-    path(f"{apiPrefix}/songs/", include("songs.urls")),
+    path(f"{apiPrefix}/albums/", include("albums.urls")),
     # Swagger paths
     path(
         "swagger.<format>/",

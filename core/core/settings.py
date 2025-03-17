@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from environs import env
@@ -30,7 +31,7 @@ CUSTOM_APPS = [
     "authentication",
     "users",
     "artists",
-    "songs",
+    "albums",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + CUSTOM_APPS
@@ -109,6 +110,8 @@ USE_TZ = True
 
 # Static and Media
 STATIC_URL = "static/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_URL = "/media/"
 
 # Custom Configs
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
