@@ -3,6 +3,7 @@ import uuid
 from django.db import DatabaseError, connection
 from django.utils import timezone
 from rest_framework import status
+from users.selectors import get_user
 from users.serializers import UserOutputSerializer, UserProfileSerializer
 
 from core.utils.response import error_response, success_response
@@ -20,28 +21,13 @@ class UserProfileService:
                 profile_dicts = [dict(zip(columns, row)) for row in results]
 
                 for profile in profile_dicts:
-                    user_id = profile.get("user_id")
-                    # TODO move raw query code to selectors
-                    c.execute("SELECT * FROM users_customuser WHERE id=%s", [user_id])
-                    result = c.fetchone()
-
-                    if not result:
-                        return error_response(
-                            error="Invalid user ID",
-                            message="User not found",
-                            status=status.HTTP_404_NOT_FOUND,
-                        )
-
-                    columns = [col[0] for col in c.description]
-                    user_dicts = dict(zip(columns, result))
-                    serializer = UserOutputSerializer(user_dicts)
-                    profile["user"] = serializer.data
+                    profile = get_user(profile)
 
             serializer = UserProfileSerializer(profile_dicts, many=True)
             profiles = serializer.data
 
             return success_response(
-                profiles,
+                data=profiles,
                 message="User profiles found successfully",
                 status=status.HTTP_200_OK,
             )
@@ -185,7 +171,7 @@ class UserProfileService:
                 for col in c.description:
                     columns.append(col[0])
 
-                old_profile = dict(zip(columns, result))
+                old_profile = dict(zip(columns, result))  # TODO selectors till here
                 first_name = payload.get("first_name", old_profile.get("first_name"))
                 last_name = payload.get("last_name", old_profile.get("last_name"))
                 dob = payload.get("dob", old_profile.get("dob"))
