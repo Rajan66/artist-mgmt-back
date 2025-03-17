@@ -1,6 +1,6 @@
 from django.core.validators import MinValueValidator
 from django.db import models
-from users.models import CustomUser as User
+from users.models.user import CustomUser as User
 
 from artists.utils import current_year, max_value_current_year
 from core.base.models import Profile
