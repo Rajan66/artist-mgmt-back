@@ -11,7 +11,7 @@ class Album(BaseModel):
     cover_image = models.ImageField(upload_to="albums/", null=True, blank=True)
     total_tracks = models.PositiveIntegerField()
     release_date = models.DateField()
-    type = models.CharField(choices=AlbumChoices, default=AlbumChoices.SINGLE)
+    album_type = models.CharField(choices=AlbumChoices, default=AlbumChoices.SINGLE)
 
     def __str__(self):
         return self.title
