@@ -6,20 +6,23 @@ album_service = AlbumService()
 
 class AlbumListView(APIView):
     def get(self, request):
-        print("Hello")
         response = album_service.get_albums()
         return response
 
-    def post(self, request, album_id):
-        pass
+    def post(self, request):
+        response = album_service.create(payload=request.data)
+        return response
 
 
 class AlbumDetailView(APIView):
-    def get(self, request, album_id, pk):
-        pass
+    def get(self, request, album_id):
+        response = album_service.get_album(album_id=album_id)
+        return response
 
-    def update(self, request, album_id, pk):
-        pass
+    def put(self, request, album_id):
+        response = album_service.update(payload=request.data, album_id=album_id)
+        return response
 
-    def delete(self, request, album_id, pk):
-        pass
+    def delete(self, request, album_id):
+        response = album_service.delete(id=album_id)
+        return response
