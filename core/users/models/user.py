@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from users.managers import CustomUserManager
 
 from core.base.choices import RoleChoices
-from core.base.models import BaseModel, Profile
+from core.base.models import BaseModel
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin, BaseModel):
@@ -26,28 +26,3 @@ class CustomUser(AbstractBaseUser, PermissionsMixin, BaseModel):
 
     def __str__(self):
         return self.email
-
-
-class UserProfile(Profile):
-    user = models.OneToOneField(
-        CustomUser,
-        related_name="user",
-        on_delete=models.CASCADE,
-    )
-    phone = models.CharField(
-        max_length=20,
-        blank=True,
-        null=True,
-    )  # add validation
-
-    class Meta:
-        verbose_name = "User Profile"
-        verbose_name_plural = "User Profiles"
-        db_table = "users_user_profile"
-
-    def __str__(self):
-        if self.first_name and self.last_name:
-            return f"{self.first_name} {self.last_name}"
-        elif self.first_name:
-            return self.first_name
-        return self.user.email

@@ -1,4 +1,7 @@
 from django.db import DatabaseError, connection
+from rest_framework import status
+
+from core.utils.exceptions import CustomAPIException
 
 
 def fetch_user(profile):
@@ -9,15 +12,29 @@ def fetch_user(profile):
             result = c.fetchone()
 
             if not result:
-                raise Exception("Invalid user ID")  # TODO Custom exception
+                raise ValueError("Invalid user ID")
 
             columns = [col[0] for col in c.description]
             user_dicts = dict(zip(columns, result))
 
-    except DatabaseError:
-        raise Exception("Failed to fetch user")
-    except Exception:
-        raise Exception("Something went wrong...")
+    except DatabaseError as e:
+        raise CustomAPIException(
+            error_type=str(e),
+            detail="Database error occurred while fetching album",
+            code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+    except ValueError as e:  # Catch invalid ID specifically
+        raise CustomAPIException(
+            error_type="Invalid ID",
+            detail=str(e),
+            code=status.HTTP_400_BAD_REQUEST,
+        )
+    except Exception as e:
+        raise CustomAPIException(
+            error_type="Unexpected Error",
+            detail=str(e),
+            code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
     return user_dicts
 

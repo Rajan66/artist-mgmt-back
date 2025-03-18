@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from drf_yasg import openapi
@@ -25,7 +27,7 @@ urlpatterns = [
     path(f"{apiPrefix}/users/", include("users.urls")),
     path(f"{apiPrefix}/auth/", include("authentication.urls")),
     path(f"{apiPrefix}/artists/", include("artists.urls")),
-    path(f"{apiPrefix}/songs/", include("songs.urls")),
+    path(f"{apiPrefix}/albums/", include("albums.urls")),
     # Swagger paths
     path(
         "swagger.<format>/",
@@ -42,4 +44,4 @@ urlpatterns = [
         schema_view.with_ui("redoc", cache_timeout=0),
         name="schema-redoc",
     ),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
