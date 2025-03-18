@@ -23,5 +23,6 @@ class AlbumDetailView(APIView):
         response = album_service.update(payload=request.data, album_id=album_id)
         return response
 
-    def delete(self, request, album_id, pk):
-        pass
+    def delete(self, request, album_id):
+        response = album_service.delete(id=album_id)
+        return response

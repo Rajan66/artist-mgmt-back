@@ -1,9 +1,16 @@
 import uuid
 
 from albums.selectors import fetch_album, fetch_albums
-from albums.serializers.album import AlbumFetchSerializer, AlbumSerializer
+from albums.serializers.album import (
+    AlbumFetchSerializer,
+    AlbumOutputSerializer,
+    AlbumSerializer,
+)
 from artists.selectors import fetch_artist
 from artists.serializers import AlbumArtistSerializer
+from django.conf import settings
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from django.db import DatabaseError, connection
 from django.utils import timezone
 from rest_framework import status
@@ -27,7 +34,9 @@ class AlbumService:
                 serializer = AlbumArtistSerializer(artist_dict)
                 album["artist"] = serializer.data
 
-            serializer = AlbumSerializer(albums_dicts, many=True)
+            if album.get("cover_image"):
+                album["cover_image"] = f"{settings.MEDIA_URL}{album['cover_image']}"
+            serializer = AlbumOutputSerializer(albums_dicts, many=True)
             albums = serializer.data
 
             return success_response(
@@ -57,7 +66,11 @@ class AlbumService:
             serializer = AlbumArtistSerializer(artist_dict)
             album_dict["artist"] = serializer.data
 
-            serializer = AlbumSerializer(album_dict)
+            if album_dict.get("cover_image"):
+                album_dict["cover_image"] = (
+                    f"{settings.MEDIA_URL}{album_dict['cover_image']}"
+                )
+            serializer = AlbumOutputSerializer(album_dict)
             albums = serializer.data
 
             return success_response(
@@ -79,7 +92,7 @@ class AlbumService:
                 id = uuid.uuid4()
                 title = payload.get("title")
                 artist_id = payload.get("artist")
-                cover_image = payload.get("cover_image")
+                cover_image_file = payload.get("cover_image")
                 total_tracks = payload.get("total_tracks")
                 release_date = payload.get("release_date")
                 album_type = payload.get("album_type")
@@ -94,23 +107,26 @@ class AlbumService:
                         code=status.HTTP_400_BAD_REQUEST,
                     )
 
-                c.execute(
-                    "SELECT name FROM artists_artist WHERE id=%s",
-                    [artist_id],
-                )
+                c.execute("SELECT name FROM artists_artist WHERE id=%s", [artist_id])
                 result = c.fetchone()
                 if not result:
                     raise ValueError("Invalid artist ID")
 
+                cover_image_path = None
+                if cover_image_file:
+                    filename = f"albums/{str(id).split('-')[0]}_{cover_image_file.name}"
+                    cover_image_path = default_storage.save(
+                        filename, ContentFile(cover_image_file.read())
+                    )
+
                 c.execute(
                     """INSERT INTO albums_album (id, title, artist_id, cover_image, total_tracks, release_date, album_type, created_at, updated_at) values
-                    (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING *;
-                """,
+                    (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING *;""",
                     [
                         id,
                         title,
                         artist_id,
-                        cover_image,
+                        cover_image_path,
                         total_tracks,
                         release_date,
                         album_type,
@@ -120,18 +136,21 @@ class AlbumService:
                 )
 
                 result = c.fetchone()
-                columns = []
-                for col in c.description:
-                    columns.append(col[0])
+                columns = [col[0] for col in c.description]
 
             album_dict = dict(zip(columns, result))
 
-            artist_dict = fetch_artist(id=artist_id)
-            serializer = AlbumArtistSerializer(artist_dict)
-            album_dict["artist"] = serializer.data
+            if album_dict.get("cover_image"):
+                album_dict["cover_image"] = (
+                    f"{settings.MEDIA_URL}{album_dict['cover_image']}"
+                )
 
-            serializer = AlbumSerializer(album_dict)
-            album = serializer.data
+            artist_dict = fetch_artist(id=artist_id)
+            artist_serializer = AlbumArtistSerializer(artist_dict)
+            album_dict["artist"] = artist_serializer.data
+
+            album_serializer = AlbumFetchSerializer(album_dict)
+            album = album_serializer.data
 
         except ValueError as e:
             raise CustomAPIException(
@@ -146,6 +165,7 @@ class AlbumService:
                 detail="Something went wrong while creating an album",
                 code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
         return success_response(
             data=album,
             message="Album created successfully",
@@ -162,16 +182,14 @@ class AlbumService:
                 id = old_album.get("id")
                 title = payload.get("title", old_album.get("title"))
                 artist_id = payload.get("artist", old_album.get("artist_id"))
-                cover_image = payload.get(
-                    "cover_image", old_album.get("cover_image"))
+                cover_image = payload.get("cover_image", old_album.get("cover_image"))
                 total_tracks = payload.get(
                     "total_tracks", old_album.get("total_tracks")
                 )
                 release_date = payload.get(
                     "release_date", old_album.get("release_date")
                 )
-                album_type = payload.get(
-                    "album_type", old_album.get("album_type"))
+                album_type = payload.get("album_type", old_album.get("album_type"))
                 created_at = old_album.get("created_at")
                 updated_at = timezone.now()
 
@@ -252,13 +270,13 @@ class AlbumService:
 
                 if not result:
                     return error_response(
-                        error="Invalid user ID",
-                        message="Profile does not exist",
+                        error="Invalid album ID",
+                        message="Album does not exist",
                         status=status.HTTP_404_NOT_FOUND,
                     )
 
             return success_response(
-                message="User profile deleted successfully",
+                message="Album deleted successfully",
                 status=status.HTTP_204_NO_CONTENT,
             )
 

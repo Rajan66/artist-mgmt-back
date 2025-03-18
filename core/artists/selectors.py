@@ -38,19 +38,19 @@ def fetch_artist(id):
 
     except DatabaseError as e:
         raise CustomAPIException(
-            error_type=str(e),
+            error=str(e),
             detail="Database error occurred while fetching artist",
             code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
-    except ValueError as e:  # Catch invalid ID specifically
+    except ValueError as e:
         raise CustomAPIException(
-            error_type="Invalid ID",
+            error="Invalid ID",
             detail=str(e),
             code=status.HTTP_400_BAD_REQUEST,
         )
     except Exception as e:
         raise CustomAPIException(
-            error_type="Unexpected Error",
+            error="Unexpected Error",
             detail=str(e),
             code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
