@@ -26,3 +26,9 @@ class AlbumDetailView(APIView):
     def delete(self, request, album_id):
         response = album_service.delete(id=album_id)
         return response
+
+
+class ArtistAlbumView(APIView):
+    def get(self, request, artist_id):
+        response = album_service.get_artist_albums(id=artist_id)
+        return response

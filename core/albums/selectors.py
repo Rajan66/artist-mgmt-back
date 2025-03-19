@@ -1,3 +1,4 @@
+from artists.selectors import check_artist
 from django.db import DatabaseError, connection
 from rest_framework import status
 
@@ -9,6 +10,8 @@ def fetch_albums():
         with connection.cursor() as c:
             c.execute("SELECT * FROM albums_album")
             results = c.fetchall()
+            if not results:
+                return []
 
             columns = []
             for col in c.description:
@@ -83,3 +86,42 @@ def fetch_album(id):
         )
 
     return album_dict
+
+
+def fetch_artist_albums(id):
+    try:
+        with connection.cursor() as c:
+            check_artist(id=id)
+            c.execute("SELECT * FROM albums_album where artist_id=%s", [id])
+
+            results = c.fetchall()
+
+            if not results:
+                raise ValueError("No albums found for this artist")
+
+            columns = []
+            for col in c.description:
+                columns.append(col[0])
+
+            albums_dicts = dict(zip(columns, results))
+
+    except DatabaseError as e:
+        raise CustomAPIException(
+            error=str(e),
+            detail="Database error occurred while fetching album",
+            code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+    except ValueError as e:
+        raise CustomAPIException(
+            error="Invalid ID",
+            detail=str(e),
+            code=status.HTTP_400_BAD_REQUEST,
+        )
+    except Exception as e:
+        raise CustomAPIException(
+            error="Unexpected Error",
+            detail=str(e),
+            code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    return albums_dicts
