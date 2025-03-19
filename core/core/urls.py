@@ -20,14 +20,15 @@ schema_view = get_schema_view(
     authentication_classes=(),
 )
 
-apiPrefix = "api/v1"
+api_prefix = "api/v1"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path(f"{apiPrefix}/users/", include("users.urls")),
-    path(f"{apiPrefix}/auth/", include("authentication.urls")),
-    path(f"{apiPrefix}/artists/", include("artists.urls")),
-    path(f"{apiPrefix}/albums/", include("albums.urls")),
+    path(f"{api_prefix}/users/", include("users.urls")),
+    path(f"{api_prefix}/auth/", include("authentication.urls")),
+    path(f"{api_prefix}/artists/", include("artists.urls")),
+    path(f"{api_prefix}/albums/", include("albums.urls")),
+    path(f"{api_prefix}/songs/", include("songs.urls")),
     # Swagger paths
     path(
         "swagger.<format>/",

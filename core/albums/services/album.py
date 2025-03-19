@@ -1,10 +1,9 @@
 import uuid
 
-from albums.selectors import fetch_album, fetch_albums
+from albums.selectors import fetch_album, fetch_albums, fetch_artist_albums
 from albums.serializers.album import (
     AlbumFetchSerializer,
     AlbumOutputSerializer,
-    AlbumSerializer,
 )
 from artists.selectors import fetch_artist
 from artists.serializers import AlbumArtistSerializer
@@ -23,6 +22,12 @@ class AlbumService:
     def get_albums(self):
         try:
             albums_dicts = fetch_albums()
+            if albums_dicts == []:
+                return success_response(
+                    message="Albums retrieved successfully",
+                    status=status.HTTP_200_OK,
+                )
+
             for album in albums_dicts:
                 artist_id = album.get("artist_id")
                 artist_dict = fetch_artist(id=artist_id)
@@ -39,18 +44,18 @@ class AlbumService:
             serializer = AlbumOutputSerializer(albums_dicts, many=True)
             albums = serializer.data
 
-            return success_response(
-                data=albums,
-                message="Albums retrieved successfully",
-                status=status.HTTP_200_OK,
-            )
-
         except Exception as e:
             return error_response(
                 error=str(e),
                 message="Failed to fetch albums",
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+        return success_response(
+            data=albums,
+            message="Albums retrieved successfully",
+            status=status.HTTP_200_OK,
+        )
 
     def get_album(self, album_id):
         try:
@@ -73,11 +78,26 @@ class AlbumService:
             serializer = AlbumOutputSerializer(album_dict)
             albums = serializer.data
 
-            return success_response(
-                data=albums,
-                message="Albums retrieved successfully",
-                status=status.HTTP_200_OK,
+        except Exception as e:
+            return error_response(
+                error=str(e),
+                message="Failed to fetch albums",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+        return success_response(
+            data=albums,
+            message="Albums retrieved successfully",
+            status=status.HTTP_200_OK,
+        )
+
+    def get_artist_albums(self, id):
+        try:
+            albums_dicts = fetch_artist_albums(id=id)
+            print(albums_dicts)
+
+            serializer = AlbumFetchSerializer(albums_dicts, many=True)
+            albums = serializer.data
 
         except Exception as e:
             return error_response(
@@ -85,6 +105,12 @@ class AlbumService:
                 message="Failed to fetch albums",
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+        return success_response(
+            data=albums,
+            message="Albums retrieved successfully",
+            status=status.HTTP_200_OK,
+        )
 
     def create(self, payload):
         try:
@@ -182,7 +208,8 @@ class AlbumService:
                 id = old_album.get("id")
                 title = payload.get("title", old_album.get("title"))
                 artist_id = payload.get("artist", old_album.get("artist_id"))
-                cover_image = payload.get("cover_image", old_album.get("cover_image"))
+                cover_image_file = payload.get("cover_image")
+                cover_image_path = old_album.get("cover_image")
                 total_tracks = payload.get(
                     "total_tracks", old_album.get("total_tracks")
                 )
@@ -209,6 +236,13 @@ class AlbumService:
                 if not result:
                     raise ValueError("Invalid artist ID")
 
+                if cover_image_file:
+                    cover_image_path = None
+                    filename = f"albums/{str(id).split('-')[0]}_{cover_image_file.name}"
+                    cover_image_path = default_storage.save(
+                        filename, ContentFile(cover_image_file.read())
+                    )
+
                 c.execute(
                     """UPDATE albums_album SET title=%s, artist_id=%s, cover_image=%s, total_tracks=%s, release_date=%s, album_type=%s, created_at=%s, updated_at=%s
                          WHERE id=%s RETURNING *;
@@ -216,7 +250,7 @@ class AlbumService:
                     [
                         title,
                         artist_id,
-                        cover_image,
+                        cover_image_path,
                         total_tracks,
                         release_date,
                         album_type,
@@ -233,11 +267,16 @@ class AlbumService:
 
             album_dict = dict(zip(columns, result))
 
-            artist_dict = fetch_artist(id=artist_id)
-            serializer = AlbumArtistSerializer(artist_dict)
-            album_dict["artist"] = serializer.data
+            if album_dict.get("cover_image"):
+                album_dict["cover_image"] = (
+                    f"{settings.MEDIA_URL}{album_dict['cover_image']}"
+                )
 
-            serializer = AlbumSerializer(album_dict)
+            # artist_dict = fetch_artist(id=artist_id)
+            # serializer = AlbumArtistSerializer(artist_dict)
+            album_dict["artist"] = album_dict.get("artist_id")
+
+            serializer = AlbumFetchSerializer(album_dict)
             album = serializer.data
 
         except ValueError as e:
