@@ -11,15 +11,31 @@ class SongListView(APIView):
         return response
 
     def post(self, request):
-        pass
+        response = song_service.create(payload=request.data)
+        return response
 
 
 class SongDetailView(APIView):
     def get(self, request, pk):
-        pass
+        response = song_service.get_song(id=pk)
+        return response
 
     def put(self, request, pk):
-        pass
+        response = song_service.update(payload=request.data, id=pk)
+        return response
 
     def delete(self, request, pk):
-        pass
+        response = song_service.delete(id=pk)
+        return response
+
+
+class ArtistSongView(APIView):
+    def get(self, request, pk):
+        response = song_service.get_artist_songs(artist_id=pk)
+        return response
+
+
+class AlbumSongView(APIView):
+    def get(self, request, pk):
+        response = song_service.get_album_songs(album_id=pk)
+        return response
