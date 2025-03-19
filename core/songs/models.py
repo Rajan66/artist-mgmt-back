@@ -12,4 +12,4 @@ class Song(BaseModel):
     genre = models.CharField(choices=GenreChoices)
 
     def __str__(self):
-        return self.title + " " + self.album_name
+        return self.title + " | " + self.album.title
