@@ -125,3 +125,20 @@ def fetch_artist_albums(id):
         )
 
     return albums_dicts
+
+
+def check_album(id):
+    try:
+        with connection.cursor() as c:
+            c.execute("SELECT title FROM albums_album WHERE id=%s", [id])
+            result = c.fetchone()
+
+            if not result:
+                raise ValueError("Invalid album ID")
+
+    except ValueError as e:
+        raise CustomAPIException(
+            error=str(e),
+            detail=str(e),
+            code=status.HTTP_400_BAD_REQUEST,
+        )

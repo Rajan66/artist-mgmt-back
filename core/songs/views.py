@@ -16,10 +16,23 @@ class SongListView(APIView):
 
 class SongDetailView(APIView):
     def get(self, request, pk):
-        pass
+        response = song_service.get_song(id=pk)
+        return response
 
     def put(self, request, pk):
         pass
 
     def delete(self, request, pk):
         pass
+
+
+class ArtistSongView(APIView):
+    def get(self, request, pk):
+        response = song_service.get_artist_songs(artist_id=pk)
+        return response
+
+
+class AlbumSongView(APIView):
+    def get(self, request, pk):
+        response = song_service.get_album_songs(album_id=pk)
+        return response
