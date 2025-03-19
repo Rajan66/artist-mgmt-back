@@ -11,7 +11,8 @@ class SongListView(APIView):
         return response
 
     def post(self, request):
-        pass
+        response = song_service.create(payload=request.data)
+        return response
 
 
 class SongDetailView(APIView):
@@ -20,10 +21,12 @@ class SongDetailView(APIView):
         return response
 
     def put(self, request, pk):
-        pass
+        response = song_service.update(payload=request.data, id=pk)
+        return response
 
     def delete(self, request, pk):
-        pass
+        response = song_service.delete(id=pk)
+        return response
 
 
 class ArtistSongView(APIView):

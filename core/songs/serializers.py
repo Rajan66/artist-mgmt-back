@@ -6,6 +6,8 @@ class BaseSongSerializer(serializers.Serializer):
     title = serializers.CharField()
     release_date = serializers.DateField()
     genre = serializers.CharField()
+    created_at = serializers.DateTimeField()
+    updated_at = serializers.DateTimeField()
 
 
 class SongSerializer(BaseSongSerializer, serializers.Serializer):
