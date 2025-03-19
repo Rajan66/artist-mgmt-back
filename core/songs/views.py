@@ -1,12 +1,14 @@
-from albums.services.album import AlbumService
 from rest_framework.views import APIView
 
-album_service = AlbumService()
+from songs.services import SongService
+
+song_service = SongService()
 
 
 class SongListView(APIView):
     def get(self, request):
-        pass
+        response = song_service.get_songs()
+        return response
 
     def post(self, request):
         pass
