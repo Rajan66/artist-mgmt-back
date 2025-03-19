@@ -8,6 +8,7 @@ from users.serializers import UserOutputSerializer
 
 from artists.selectors import fetch_artists
 from artists.serializers import ArtistSerializer
+from core.utils.exceptions import CustomAPIException
 from core.utils.response import error_response, success_response
 
 
@@ -43,6 +44,9 @@ class ArtistService:
                 c.execute("SELECT * FROM artists_artist WHERE user_id=%s", [id])
                 result = c.fetchone()
 
+                if not result:
+                    raise ValueError("Invalid user ID")
+
                 columns = []
                 for col in c.description:
                     columns.append(col[0])
@@ -73,6 +77,12 @@ class ArtistService:
                 status=status.HTTP_200_OK,
             )
 
+        except ValueError as e:
+            raise CustomAPIException(
+                error=str(e),
+                detail="Invalid ID",
+                code=status.HTTP_400_BAD_REQUEST,
+            )
         except Exception as e:
             return error_response(
                 error=str(e),
