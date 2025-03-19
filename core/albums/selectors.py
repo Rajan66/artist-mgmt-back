@@ -72,7 +72,7 @@ def fetch_album(id):
             detail="Database error occurred while fetching album",
             code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
-    except ValueError as e:  # Catch invalid ID specifically
+    except ValueError as e:
         raise CustomAPIException(
             error="Invalid ID",
             detail=str(e),
