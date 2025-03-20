@@ -1,3 +1,4 @@
+from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
 from songs.services import SongService
@@ -6,6 +7,9 @@ song_service = SongService()
 
 
 class SongListView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
     def get(self, request):
         response = song_service.get_songs()
         return response
