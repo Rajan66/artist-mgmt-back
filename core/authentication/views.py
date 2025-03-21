@@ -31,3 +31,12 @@ class TokenRefreshView(APIView):
     def post(self, request):
         response = auth_service.refresh_token(request)
         return response
+
+
+class TokenBlacklistView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        response = auth_service.blacklist_token(request)
+        return response
