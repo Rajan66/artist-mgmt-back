@@ -5,6 +5,7 @@ from rest_framework.authentication import BaseAuthentication
 from users.models import CustomUser as User
 
 from authentication.exceptions import CustomAuthenticationException
+from authentication.models import TokenBlacklist
 from core import settings
 
 
@@ -21,10 +22,10 @@ class JWTAuthentication(BaseAuthentication):
             )
 
         try:
-            id = self.check_claims(token)
+            id = self.check_claims(token, "access")
             user = (
                 User.objects.filter(id=id)
-                .only("id", "email", "is_active", "is_staff", "last_login")
+                .only("id", "email", "role", "is_active", "is_staff", "last_login")
                 .first()
             )
 
@@ -55,6 +56,7 @@ class JWTAuthentication(BaseAuthentication):
         payload = {
             "id": str(user.id),
             "email": user.email,
+            "role": user.role,
             "iat": timezone.now(),
             "exp": timezone.now() + timezone.timedelta(minutes=expiry),
             "type": "access",
@@ -63,6 +65,13 @@ class JWTAuthentication(BaseAuthentication):
         access_token = jwt.encode(
             payload=payload, key=settings.SECRET_KEY, algorithm="HS256"
         )
+        isBlacklisted = self.check_blacklist(access_token)
+        if isBlacklisted:
+            raise CustomAuthenticationException(
+                detail="Blacklisted token!",
+                code=status.HTTP_403_FORBIDDEN,
+                error_type="Authenication error",
+            )
         return access_token
 
     def generate_refresh_token(self, user: User, *args, **kwargs):
@@ -71,6 +80,7 @@ class JWTAuthentication(BaseAuthentication):
         payload = {
             "id": str(user.id),
             "email": user.email,
+            "role": user.role,
             "iat": timezone.now(),
             "exp": timezone.now() + timezone.timedelta(days=expiry),
             "type": "refresh",
@@ -79,6 +89,13 @@ class JWTAuthentication(BaseAuthentication):
         refresh_token = jwt.encode(
             payload=payload, key=settings.SECRET_KEY, algorithm="HS256"
         )
+        isBlacklisted = self.check_blacklist(refresh_token)
+        if isBlacklisted:
+            raise CustomAuthenticationException(
+                detail="Blacklisted token!",
+                code=status.HTTP_403_FORBIDDEN,
+                error_type="Authenication error",
+            )
         return refresh_token
 
     def get_tokens(self, user, *args, **kwargs):
@@ -87,9 +104,53 @@ class JWTAuthentication(BaseAuthentication):
 
         return [access_token, refresh_token]
 
-    def check_claims(self, token):
+    def check_claims(self, token, token_type):
+        isBlacklisted = self.check_blacklist(token)
+        if isBlacklisted:
+            raise CustomAuthenticationException(
+                detail="Blacklisted token!",
+                code=status.HTTP_403_FORBIDDEN,
+                error_type="Authenication error",
+            )
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms="HS256")
 
-        if payload["type"] != "access":
-            raise CustomAuthenticationException(detail="Invalid token type!")
+        if payload["type"] != token_type:
+            raise CustomAuthenticationException(
+                detail="Invalid token type!",
+                code=status.HTTP_403_FORBIDDEN,
+                error_type="Authenication error",
+            )
         return payload["id"]
+
+    def validate_refresh(self, request):
+        try:
+            authorization = request.headers.get("Authorization")
+            if authorization:
+                token = authorization.split(" ")[1]
+            else:
+                raise Exception("Invalid token type")
+            user_id = self.check_claims(token, "refresh")
+            self.blacklist_token(token)
+
+            return user_id
+        except Exception as e:
+            raise CustomAuthenticationException(
+                detail=str(e),
+                code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                error_type="Authenication error",
+            )
+
+    def check_blacklist(self, token):
+        try:
+            token_found = TokenBlacklist.objects.filter(token=token).first()
+            return True if token_found else False
+
+        except Exception as e:
+            raise CustomAuthenticationException(
+                detail=str(e),
+                code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                error_type="Authenication error",
+            )
+
+    def blacklist_token(self, token):
+        token = TokenBlacklist.objects.create(token=token)
