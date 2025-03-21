@@ -6,6 +6,8 @@ from authentication.helpers import JWTAuthentication
 from authentication.serializers import UserLoginSerializer, UserRegisterSerializer
 from core.utils.response import success_response
 
+jwt_auth = JWTAuthentication()
+
 
 class AuthService:
     def login(self, request):
@@ -20,13 +22,12 @@ class AuthService:
 
         user = serializer.validated_data["user"]
 
-        jwt_auth = JWTAuthentication()
-        token = jwt_auth.get_tokens(user)
+        tokens = jwt_auth.get_tokens(user)
         data = {
             "id": user.id,
             "email": user.email,
-            "access_token": token[0],
-            "refresh_token": token[1],
+            "access_token": tokens[0],
+            "refresh_token": tokens[1],
         }
 
         return success_response(data, "login successful", status.HTTP_200_OK)
@@ -53,3 +54,22 @@ class AuthService:
             message="Registration successful",
             status=status.HTTP_201_CREATED,
         )
+
+    def refresh_token(self, request):
+        user_id = jwt_auth.validate_refresh(request)
+        user = (
+            User.objects.filter(id=user_id)
+            .only("id", "email", "role", "is_active", "is_staff", "last_login")
+            .first()
+        )
+        print("User =============>", user)
+
+        tokens = jwt_auth.get_tokens(user)
+        data = {
+            "id": user.id,
+            "email": user.email,
+            "access_token": tokens[0],
+            "refresh_token": tokens[1],
+        }
+
+        return success_response(data, "Token refresh successful", status.HTTP_200_OK)
