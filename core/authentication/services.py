@@ -73,3 +73,21 @@ class AuthService:
         }
 
         return success_response(data, "Token refresh successful", status.HTTP_200_OK)
+
+    def blacklist_token(self, request):
+        try:
+            authorization = request.headers.get("Authorization")
+            if authorization:
+                token = authorization.split(" ")[1]
+                jwt_auth.blacklist_token(token)
+                return success_response(
+                    None, "Token blacklisted successful", status.HTTP_204_NO_CONTENT
+                )
+            else:
+                raise Exception("Invalid token type")
+        except Exception as e:
+            raise CustomAuthenticationException(
+                detail=str(e),
+                code=status.HTTP_403_FORBIDDEN,
+                error_type="Authentication error",
+            )
