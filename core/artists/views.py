@@ -17,11 +17,11 @@ class ArtistDetailView(APIView):
         return response
 
     def post(self, request, pk):
-        response = aritst_service.create(payload=request.data, user_id=pk)
+        response = aritst_service.create(payload=request.data, id=pk)
         return response
 
     def put(self, request, pk):
-        response = aritst_service.update(payload=request.data, user_id=pk)
+        response = aritst_service.update(payload=request.data, id=pk)
         return response
 
     def delete(self, request, pk):
