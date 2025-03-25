@@ -41,11 +41,11 @@ class ArtistService:
     def get_artist(self, id):
         try:
             with connection.cursor() as c:
-                c.execute("SELECT * FROM artists_artist WHERE user_id=%s", [id])
+                c.execute("SELECT * FROM artists_artist WHERE artist_id=%s", [id])
                 result = c.fetchone()
 
                 if not result:
-                    raise ValueError("Invalid user ID")
+                    raise ValueError("Invalid artist ID")
 
                 columns = []
                 for col in c.description:
@@ -157,12 +157,12 @@ class ArtistService:
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    def update(self, payload, user_id):
+    def update(self, payload, id):
         try:
             with connection.cursor() as c:
                 c.execute(
-                    "SELECT * FROM artists_artist WHERE user_id=%s",
-                    [user_id],
+                    "SELECT * FROM artists_artist WHERE id=%s",
+                    [id],
                 )
                 result = c.fetchone()
                 if not result:
@@ -190,7 +190,7 @@ class ArtistService:
                 c.execute(
                     """UPDATE artists_artist SET
                     name=%s, first_release_year=%s, no_of_albums_released=%s, first_name=%s, last_name=%s, dob=%s, gender=%s, address=%s,  updated_at=%s 
-                    WHERE user_id=%s RETURNING *;
+                    WHERE id=%s RETURNING *;
                     """,
                     [
                         name,
@@ -202,7 +202,7 @@ class ArtistService:
                         gender,
                         address,
                         updated_at,
-                        user_id,
+                        id,
                     ],
                 )
                 result = c.fetchone()
@@ -239,14 +239,14 @@ class ArtistService:
         try:
             with connection.cursor() as c:
                 c.execute(
-                    "DELETE FROM artists_artist WHERE user_id=%s RETURNING TRUE;",
+                    "DELETE FROM artists_artist WHERE id=%s RETURNING TRUE;",
                     [id],
                 )
                 result = c.fetchone()
 
                 if not result:
                     return error_response(
-                        error="Invalid user ID",
+                        error="Invalid artist ID",
                         message="Artist does not exist",
                         status=status.HTTP_404_NOT_FOUND,
                     )
