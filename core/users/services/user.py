@@ -73,6 +73,14 @@ class UserService:
             date_joined = timezone.now()
             updated_at = timezone.now()
 
+            artists_json = payload.get("artist", "")
+            print(not artists_json)
+
+            # artists_dict = {}
+            # if artists_json:
+            #     artists_dict = json.loads(artists_json)
+            #     print(artists_dict)
+
             with connection.cursor() as c:
                 c.execute(
                     """INSERT INTO users_customuser (id, email, password, role, is_active, is_staff, is_superuser, date_joined, updated_at) 
@@ -98,8 +106,11 @@ class UserService:
             user = serializer.data
 
             if user.get("role") == "ARTIST":
-                # create an artist profile
-                pass
+                if not artists_json:
+                    print("bruh")
+                    create_profile(artist=None, user=user)
+                else:
+                    create_profile(artist=artists_json, user=user)
             elif user.get("role") == "ARTIST_MANAGER" or "SUPER_ADMIN":
                 # create an user profile
                 create_profile(artist=None, user=user)

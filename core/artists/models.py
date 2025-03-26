@@ -12,7 +12,7 @@ class Artist(Profile):
         related_name="artist",
         on_delete=models.CASCADE,
     )
-    name = models.CharField(unique=True, verbose_name="artist name")
+    name = models.CharField(blank=True, null=True, verbose_name="artist name")
     # no use, we have to validate in the services anyways
     first_release_year = models.PositiveIntegerField(
         default=current_year(),
