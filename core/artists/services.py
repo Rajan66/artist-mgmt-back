@@ -41,7 +41,7 @@ class ArtistService:
     def get_artist(self, id):
         try:
             with connection.cursor() as c:
-                c.execute("SELECT * FROM artists_artist WHERE artist_id=%s", [id])
+                c.execute("SELECT * FROM artists_artist WHERE id=%s", [id])
                 result = c.fetchone()
 
                 if not result:
@@ -52,8 +52,12 @@ class ArtistService:
                     columns.append(col[0])
 
                 artist_dict = dict(zip(columns, result))
+                user_id = artist_dict.get("user_id")
 
-                c.execute("SELECT * FROM users_customuser WHERE id=%s", [id])
+                c.execute(
+                    "SELECT * FROM users_customuser WHERE id=%s",
+                    [user_id],
+                )
                 result = c.fetchone()
 
                 if not result:
@@ -94,9 +98,9 @@ class ArtistService:
         try:
             payload = payload or {}
             id = payload.get("id", uuid.uuid4())
-            name = payload.get("name")
-            first_release_year = payload.get("first_release_year")
-            no_of_albums_released = payload.get("no_of_albums_released")
+            name = payload.get("name", "")
+            first_release_year = payload.get("first_release_year", 0)
+            no_of_albums_released = payload.get("no_of_albums_released", 0)
             first_name = payload.get("first_name", "")
             last_name = payload.get("last_name", "")
             dob = payload.get("dob", None)
@@ -136,6 +140,7 @@ class ArtistService:
                     columns.append(col[0])
 
             artist_dicts = dict(zip(columns, result))
+            print(artist_dicts)
 
             user_dicts = fetch_user(artist_dicts)
             serializer = UserOutputSerializer(user_dicts)
