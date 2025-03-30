@@ -113,7 +113,7 @@ class ArtistService:
             with connection.cursor() as c:
                 c.execute(
                     """INSERT INTO artists_artist (id,manager_id, name, first_release_year, no_of_albums_released, first_name, last_name, dob, gender, address,  created_at, updated_at, user_id)
-                    values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING *;
+                    values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s) RETURNING *;
                     """,
                     [
                         id,
