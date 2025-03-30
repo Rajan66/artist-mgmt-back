@@ -5,6 +5,7 @@ from users.serializers import UserOutputSerializer
 class ArtistSerializer(serializers.Serializer):
     id = serializers.UUIDField(read_only=True)
     user = UserOutputSerializer()
+    manager_id = serializers.CharField()
     name = serializers.CharField()
     first_release_year = serializers.IntegerField()
     no_of_albums_released = serializers.IntegerField()

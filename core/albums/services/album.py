@@ -10,7 +10,7 @@ from artists.serializers import AlbumArtistSerializer
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from django.db import DatabaseError, connection
+from django.db import DatabaseError, connection, transaction
 from django.utils import timezone
 from rest_framework import status
 
@@ -300,19 +300,24 @@ class AlbumService:
 
     def delete(self, id):
         try:
-            with connection.cursor() as c:
-                c.execute(
-                    "DELETE FROM albums_album WHERE id=%s RETURNING TRUE;",
-                    [id],
-                )
-                result = c.fetchone()
-
-                if not result:
-                    return error_response(
-                        error="Invalid album ID",
-                        message="Album does not exist",
-                        status=status.HTTP_404_NOT_FOUND,
+            with transaction.atomic():
+                with connection.cursor() as c:
+                    c.execute(
+                        "DELETE FROM songs_song WHERE album_id=%s RETURNING TRUE",
+                        [id],
                     )
+                    c.execute(
+                        "DELETE FROM albums_album WHERE id=%s RETURNING TRUE;",
+                        [id],
+                    )
+                    result = c.fetchone()
+
+                    if not result:
+                        return error_response(
+                            error="Invalid album ID",
+                            message="Album does not exist",
+                            status=status.HTTP_404_NOT_FOUND,
+                        )
 
             return success_response(
                 message="Album deleted successfully",
