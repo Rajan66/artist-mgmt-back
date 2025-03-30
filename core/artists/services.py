@@ -98,6 +98,7 @@ class ArtistService:
         try:
             payload = payload or {}
             id = payload.get("id", uuid.uuid4())
+            manager_id = payload.get("manager_id", None)
             name = payload.get("name", "")
             first_release_year = payload.get("first_release_year", 0)
             no_of_albums_released = payload.get("no_of_albums_released", 0)
@@ -111,11 +112,12 @@ class ArtistService:
 
             with connection.cursor() as c:
                 c.execute(
-                    """INSERT INTO artists_artist (id, name, first_release_year, no_of_albums_released, first_name, last_name, dob, gender, address,  created_at, updated_at, user_id)
+                    """INSERT INTO artists_artist (id,manager_id, name, first_release_year, no_of_albums_released, first_name, last_name, dob, gender, address,  created_at, updated_at, user_id)
                     values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING *;
                     """,
                     [
                         id,
+                        manager_id,
                         name,
                         first_release_year,
                         no_of_albums_released,

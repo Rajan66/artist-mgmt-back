@@ -13,7 +13,15 @@ class Artist(Profile):
         on_delete=models.CASCADE,
     )
     name = models.CharField(blank=True, null=True, verbose_name="artist name")
-    # no use, we have to validate in the services anyways
+    manager = models.OneToOneField(
+        User,
+        related_name="manager",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        default=None,
+    )
+    name = models.CharField(unique=True, verbose_name="artist name")
     first_release_year = models.PositiveIntegerField(
         default=current_year(),
         validators=[MinValueValidator(1980), max_value_current_year],
