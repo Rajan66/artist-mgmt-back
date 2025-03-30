@@ -119,11 +119,13 @@ class AlbumService:
                 title = payload.get("title")
                 artist_id = payload.get("artist")
                 cover_image_file = payload.get("cover_image")
-                total_tracks = payload.get("total_tracks")
+                total_tracks = payload.get("total_tracks", 0)
                 release_date = payload.get("release_date")
-                album_type = payload.get("album_type")
+                album_type = payload.get("album_type", "single")
                 created_at = timezone.now()
                 updated_at = timezone.now()
+
+                print(cover_image_file)
 
                 try:
                     uuid.UUID(artist_id, version=4)
@@ -139,7 +141,11 @@ class AlbumService:
                     raise ValueError("Invalid artist ID")
 
                 cover_image_path = None
-                if cover_image_file:
+                if (
+                    cover_image_file
+                    and cover_image_file != {}
+                    and cover_image_file != ""
+                ):
                     filename = f"albums/{str(id).split('-')[0]}_{cover_image_file.name}"
                     cover_image_path = default_storage.save(
                         filename, ContentFile(cover_image_file.read())
@@ -236,7 +242,11 @@ class AlbumService:
                 if not result:
                     raise ValueError("Invalid artist ID")
 
-                if cover_image_file:
+                if (
+                    cover_image_file
+                    and cover_image_file != {}
+                    and cover_image_file != ""
+                ):
                     cover_image_path = None
                     filename = f"albums/{str(id).split('-')[0]}_{cover_image_file.name}"
                     cover_image_path = default_storage.save(
