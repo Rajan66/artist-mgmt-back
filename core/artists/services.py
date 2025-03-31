@@ -1,5 +1,8 @@
 import uuid
 
+from django.conf import settings
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from django.db import DatabaseError, connection
 from django.utils import timezone
 from rest_framework import status
@@ -24,6 +27,15 @@ class ArtistService:
                 user_dicts = fetch_user(artist)
                 serializer = UserOutputSerializer(user_dicts)
                 artist["user"] = serializer.data
+
+                if artist.get("cover_image"):
+                    artist["cover_image"] = (
+                        f"{settings.MEDIA_URL}{artist['cover_image']}"
+                    )
+                if artist.get("profile_image"):
+                    artist["profile_image"] = (
+                        f"{settings.MEDIA_URL}{artist['profile_image']}"
+                    )
 
             serializer = ArtistSerializer(artist_dicts, many=True)
             artists = serializer.data
@@ -55,6 +67,15 @@ class ArtistService:
                     columns.append(col[0])
 
                 artist_dict = dict(zip(columns, result))
+
+                if artist_dict.get("cover_image"):
+                    artist_dict["cover_image"] = (
+                        f"{settings.MEDIA_URL}{artist_dict['cover_image']}"
+                    )
+                if artist_dict.get("profile_image"):
+                    artist_dict["profile_image"] = (
+                        f"{settings.MEDIA_URL}{artist_dict['profile_image']}"
+                    )
                 user_id = artist_dict.get("user_id")
 
                 c.execute(
@@ -112,6 +133,8 @@ class ArtistService:
             address = payload.get("address", "")
             created_at = payload.get("created_at", timezone.now())
             updated_at = timezone.now()
+            cover_image_file = payload.get("cover_image")
+            profile_image_file = payload.get("profile_image")
 
             if manager_id:
                 check_manager = User.objects.filter(
@@ -121,10 +144,33 @@ class ArtistService:
                     raise ValidationError(
                         "Invalid manager ID or the user is not a manager."
                     )
+
+            cover_image_path = None
+            profile_image_path = None
+            if cover_image_file and cover_image_file != {} and cover_image_file != "":
+                filename = (
+                    f"artists/cover/{str(id).split('-')[0]}_{cover_image_file.name}"
+                )
+                cover_image_path = default_storage.save(
+                    filename, ContentFile(cover_image_file.read())
+                )
+
+            if (
+                profile_image_file
+                and profile_image_file != {}
+                and profile_image_file != ""
+            ):
+                filename = (
+                    f"artists/profile/{str(id).split('-')[0]}_{profile_image_file.name}"
+                )
+                profile_image_path = default_storage.save(
+                    filename, ContentFile(profile_image_file.read())
+                )
+
             with connection.cursor() as c:
                 c.execute(
-                    """INSERT INTO artists_artist (id,manager_id, name, first_release_year, no_of_albums_released, first_name, last_name, dob, gender, address,  created_at, updated_at, user_id)
-                    values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING *;
+                    """INSERT INTO artists_artist (id,manager_id, name, first_release_year, no_of_albums_released, first_name, last_name, dob, gender, address,  created_at, updated_at, profile_image, cover_image,user_id)
+                    values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING *;
                     """,
                     [
                         id,
@@ -139,6 +185,8 @@ class ArtistService:
                         address,
                         created_at,
                         updated_at,
+                        profile_image_path,
+                        cover_image_path,
                         user_id,
                     ],
                 )
@@ -153,7 +201,15 @@ class ArtistService:
                     columns.append(col[0])
 
             artist_dicts = dict(zip(columns, result))
-            print(artist_dicts)
+
+            if artist_dicts.get("cover_image"):
+                artist_dicts["cover_image"] = (
+                    f"{settings.MEDIA_URL}{artist_dicts['cover_image']}"
+                )
+            if artist_dicts.get("profile_image"):
+                artist_dicts["profile_image"] = (
+                    f"{settings.MEDIA_URL}{artist_dicts['profile_image']}"
+                )
 
             user_dicts = fetch_user(artist_dicts)
             serializer = UserOutputSerializer(user_dicts)
@@ -213,10 +269,38 @@ class ArtistService:
                 gender = payload.get("gender", artist_profile.get("gender"))
                 address = payload.get("address", artist_profile.get("address"))
                 updated_at = timezone.now()
+                cover_image_file = payload.get("cover_image")
+                profile_image_file = payload.get("profile_image")
+                cover_image_path = artist_profile.get("cover_image")
+                profile_image_path = artist_profile.get("profile_image")
+
+                if (
+                    cover_image_file
+                    and cover_image_file != {}
+                    and cover_image_file != ""
+                ):
+                    cover_image_path = None
+                    filename = (
+                        f"artists/cover/{str(id).split('-')[0]}_{cover_image_file.name}"
+                    )
+                    cover_image_path = default_storage.save(
+                        filename, ContentFile(cover_image_file.read())
+                    )
+
+                if (
+                    profile_image_file
+                    and profile_image_file != {}
+                    and profile_image_file != ""
+                ):
+                    profile_image_path = None
+                    filename = f"artists/profile/{str(id).split('-')[0]}_{profile_image_file.name}"
+                    profile_image_path = default_storage.save(
+                        filename, ContentFile(profile_image_file.read())
+                    )
 
                 c.execute(
-                    """UPDATE artists_artist SET
-                    name=%s, first_release_year=%s, no_of_albums_released=%s, first_name=%s, last_name=%s, dob=%s, gender=%s, address=%s,  updated_at=%s 
+                    """UPDATE artists_artist SET 
+                    name=%s, first_release_year=%s, no_of_albums_released=%s, first_name=%s, last_name=%s, dob=%s, gender=%s, address=%s,  updated_at=%s, profile_image, cover_image 
                     WHERE id=%s RETURNING *;
                     """,
                     [
@@ -229,6 +313,8 @@ class ArtistService:
                         gender,
                         address,
                         updated_at,
+                        profile_image_path,
+                        cover_image_path,
                         id,
                     ],
                 )
@@ -241,6 +327,16 @@ class ArtistService:
                     columns.append(col[0])
 
             artist_dict = dict(zip(columns, result))
+            if artist_dict.get("cover_image"):
+                artist_dict["cover_image"] = (
+                    f"{settings.MEDIA_URL}{artist_dict['cover_image']}"
+                )
+            if artist_dict.get("profile_image"):
+                artist_dict["profile_image"] = (
+                    f"{settings.MEDIA_URL}{artist_dict['profile_image']}"
+                )
+
+            print(artist_dict)
 
             user_dict = fetch_user(artist_dict)
             serializer = UserOutputSerializer(user_dict)

@@ -15,3 +15,22 @@ def custom_exception_handler(exc, context):
         )
 
     return response
+
+
+def convert_formdata_to_json(payload):
+    json_object = {}
+
+    for key, value in payload.items():
+        keys = key.replace("]", "").split(
+            "["
+        )  # Split `artist[dob]` into `["artist", "dob"]`
+
+        current = json_object
+        for k in keys[:-1]:
+            if k not in current:
+                current[k] = {}
+            current = current[k]
+
+        current[keys[-1]] = value  # Assign value
+
+    return json_object
