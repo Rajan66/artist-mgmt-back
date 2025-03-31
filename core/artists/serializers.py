@@ -30,3 +30,13 @@ class AlbumArtistSerializer(serializers.Serializer):
     address = serializers.CharField()
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField()
+
+
+class SongArtistSerializer(serializers.Serializer):
+    id = serializers.UUIDField(read_only=True)
+    manager_id = serializers.CharField()
+    name = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField()

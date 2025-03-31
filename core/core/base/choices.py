@@ -19,6 +19,8 @@ class GenreChoices(models.TextChoices):
     CLASSIC = "classic"
     ROCK = "rock"
     JAZZ = "jazz"
+    INDIE = "indie"
+    JPOP = "jpop"
 
 
 class AlbumChoices(models.TextChoices):

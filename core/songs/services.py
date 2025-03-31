@@ -6,6 +6,7 @@ from django.utils import timezone
 from rest_framework import status
 
 from core.utils.response import error_response, success_response
+from songs.models import Song
 from songs.selectors import (
     fetch_album_songs,
     fetch_artist_songs,
@@ -19,7 +20,7 @@ class SongService:
     def get_songs(self):
         try:
             songs_dicts = fetch_songs()
-            serializer = SongSerializer(songs_dicts, many=True)
+            serializer = SongOutputSerializer(songs_dicts, many=True)
             songs = serializer.data
 
         except Exception as e:
@@ -229,5 +230,26 @@ class SongService:
             return error_response(
                 error=str(e),
                 message="Database error",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def get_manager_songs(self, manager_id):
+        try:
+            filtered_songs = Song.objects.prefetch_related("album__artist").filter(
+                album__artist__manager_id=manager_id
+            )
+
+            songs = SongOutputSerializer(filtered_songs, many=True).data
+
+            return success_response(
+                data=songs,
+                message="Songs retrieved successfully",
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            return error_response(
+                error=str(e),
+                message="Failed to fetch songs",
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

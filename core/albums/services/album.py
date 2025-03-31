@@ -1,5 +1,6 @@
 import uuid
 
+from albums.models.album import Album
 from albums.selectors import fetch_album, fetch_albums, fetch_artist_albums
 from albums.serializers.album import (
     AlbumFetchSerializer,
@@ -13,6 +14,7 @@ from django.core.files.storage import default_storage
 from django.db import DatabaseError, connection, transaction
 from django.utils import timezone
 from rest_framework import status
+from songs.models import Song
 
 from core.utils.exceptions import CustomAPIException
 from core.utils.response import error_response, success_response
@@ -125,8 +127,6 @@ class AlbumService:
                 created_at = timezone.now()
                 updated_at = timezone.now()
 
-                print(cover_image_file)
-
                 try:
                     uuid.UUID(artist_id, version=4)
                 except ValueError:
@@ -205,6 +205,7 @@ class AlbumService:
         )
 
     def update(self, payload, album_id):
+        song_count = Song.objects.filter(album=album_id).count()
         try:
             with connection.cursor() as c:
                 old_dict = fetch_album(id=album_id)
@@ -252,6 +253,17 @@ class AlbumService:
                     cover_image_path = default_storage.save(
                         filename, ContentFile(cover_image_file.read())
                     )
+
+                if song_count == 1 or song_count == 0:
+                    album_type = "single"
+                    total_tracks = song_count
+                elif song_count > 1 and song_count < 5:
+                    album_type = "ep"
+                    total_tracks = song_count
+
+                elif song_count > 4:
+                    album_type = "album"
+                    total_tracks = song_count
 
                 c.execute(
                     """UPDATE albums_album SET title=%s, artist_id=%s, cover_image=%s, total_tracks=%s, release_date=%s, album_type=%s, created_at=%s, updated_at=%s
@@ -338,5 +350,26 @@ class AlbumService:
             return error_response(
                 error=str(e),
                 message="Database error",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def get_manager_albums(self, manager_id):
+        try:
+            filtered_albums = Album.objects.filter(
+                artist__manager=manager_id
+            ).prefetch_related("artist")
+
+            albums = AlbumOutputSerializer(filtered_albums, many=True).data
+
+            return success_response(
+                data=albums,
+                message="Albums retrieved successfully",
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            return error_response(
+                error=str(e),
+                message="Failed to fetch albums",
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

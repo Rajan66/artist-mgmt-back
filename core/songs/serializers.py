@@ -1,3 +1,4 @@
+from albums.serializers.album import AlbumOutputSerializer
 from rest_framework import serializers
 
 
@@ -15,5 +16,6 @@ class SongSerializer(BaseSongSerializer, serializers.Serializer):
 
 
 class SongOutputSerializer(BaseSongSerializer, serializers.Serializer):
-    artist_id = serializers.CharField()
-    album_id = serializers.CharField(source="album")
+    # artist_id = serializers.CharField()
+    # album_id = serializers.CharField(source="album")
+    album = AlbumOutputSerializer()

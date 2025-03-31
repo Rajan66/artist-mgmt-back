@@ -1,3 +1,4 @@
+from albums.models.album import Album
 from albums.selectors import check_album
 from django.db import DatabaseError, connection
 from rest_framework import status
@@ -17,7 +18,9 @@ def fetch_songs():
 
             songs_dicts = [dict(zip(columns, row)) for row in results]
             for song in songs_dicts:
-                song["album"] = song["album_id"]
+                album = Album.objects.filter(id=song["album_id"]).first()
+                print(album)
+                song["album"] = album
 
     except DatabaseError as e:
         raise CustomAPIException(

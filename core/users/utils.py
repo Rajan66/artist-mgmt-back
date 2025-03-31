@@ -2,10 +2,18 @@ from artists.services import ArtistService
 from users.services.user_profile import UserProfileService
 
 
-def create_profile(artist, user, **kwargs):
-    if user.get("role") == "ARTIST":
+def create_profile(profile, user, **kwargs):
+    if user.get("role") == "artist":
         artist_service = ArtistService()
-        artist_service.create(payload=artist, user_id=user.get("id"))
-    elif user.get("role") in ["ARTIST_MANAGER", "SUPER_ADMIN"]:
+        response = artist_service.create(payload=profile, user_id=user.get("id"))
+        if response.status_code == 201:
+            return True
+        else:
+            return False
+    elif user.get("role") in ["artist_manager", "super_admin"]:
         user_profile_service = UserProfileService()
-        user_profile_service.create(payload=artist, user_id=user.get("id"))
+        response = user_profile_service.create(payload=profile, user_id=user.get("id"))
+        if response.status_code == 201:
+            return True
+        else:
+            return False
