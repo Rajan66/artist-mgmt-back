@@ -3,9 +3,12 @@ import uuid
 from django.db import DatabaseError, connection
 from django.utils import timezone
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
+from users.models.user import CustomUser as User
 from users.selectors import fetch_user
 from users.serializers import UserOutputSerializer
 
+from artists.models import Artist
 from artists.selectors import fetch_artists
 from artists.serializers import ArtistSerializer
 from core.utils.exceptions import CustomAPIException
@@ -110,10 +113,18 @@ class ArtistService:
             created_at = payload.get("created_at", timezone.now())
             updated_at = timezone.now()
 
+            if manager_id:
+                check_manager = User.objects.filter(
+                    id=manager_id, role="artist_manager"
+                ).exists()
+                if not check_manager:
+                    raise ValidationError(
+                        "Invalid manager ID or the user is not a manager."
+                    )
             with connection.cursor() as c:
                 c.execute(
                     """INSERT INTO artists_artist (id,manager_id, name, first_release_year, no_of_albums_released, first_name, last_name, dob, gender, address,  created_at, updated_at, user_id)
-                    values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s) RETURNING *;
+                    values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING *;
                     """,
                     [
                         id,
@@ -157,7 +168,16 @@ class ArtistService:
                 status=status.HTTP_201_CREATED,
             )
 
+        except ValidationError as e:
+            print(str(e))
+            return error_response(
+                error=str(e),
+                message="Failed to create artist profile",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
         except Exception as e:
+            print(str(e))
             return error_response(
                 error=str(e),
                 message="Failed to create artist profile",
@@ -267,5 +287,24 @@ class ArtistService:
             return error_response(
                 error=str(e),
                 message="Database error",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def get_manager_artists(self, manager_id):
+        try:
+            filtered_artists = Artist.objects.filter(manager=manager_id)
+
+            artists = ArtistSerializer(filtered_artists, many=True).data
+
+            return success_response(
+                data=artists,
+                message="Artists retrieved successfully",
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            return error_response(
+                error=str(e),
+                message="Failed to fetch artists",
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

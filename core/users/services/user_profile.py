@@ -78,7 +78,6 @@ class UserProfileService:
             )
 
     def create(self, payload, user_id):
-        # TODO add transcation and kill user creation if profile fails
         try:
             payload = payload or {}
             id = payload.get("id", uuid.uuid4())
@@ -91,6 +90,7 @@ class UserProfileService:
             created_at = payload.get("created_at", timezone.now())
             updated_at = timezone.now()
 
+            print(payload)
             with connection.cursor() as c:
                 c.execute(
                     """INSERT INTO users_user_profile (id, first_name, last_name, dob, gender, address, phone, created_at, updated_at, user_id)

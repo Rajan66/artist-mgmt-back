@@ -32,3 +32,9 @@ class ArtistAlbumView(APIView):
     def get(self, request, artist_id):
         response = album_service.get_artist_albums(id=artist_id)
         return response
+
+
+class ManagerAlbumView(APIView):
+    def get(self, request, manager_id):
+        response = album_service.get_manager_albums(manager_id=manager_id)
+        return response

@@ -27,3 +27,9 @@ class ArtistDetailView(APIView):
     def delete(self, request, pk):
         response = aritst_service.delete(id=pk)
         return response
+
+
+class ManagerArtistView(APIView):
+    def get(self, request, manager_id):
+        response = aritst_service.get_manager_artists(manager_id=manager_id)
+        return response

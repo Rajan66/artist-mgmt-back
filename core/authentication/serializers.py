@@ -8,6 +8,7 @@ class UserLoginSerializer(serializers.Serializer):
     id = serializers.UUIDField(read_only=True)
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
+    role = serializers.CharField(read_only=True)
 
     def validate(self, attrs):
         email = attrs["email"]
@@ -19,6 +20,8 @@ class UserLoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid crendentials.")
 
         if not user.check_password(password):
+            flag = user.check_password(password)
+            print(flag)
             raise serializers.ValidationError("Invalid password.")
 
         attrs["user"] = user

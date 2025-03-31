@@ -13,7 +13,7 @@ class Artist(Profile):
         on_delete=models.CASCADE,
     )
     name = models.CharField(blank=True, null=True, verbose_name="artist name")
-    manager = models.OneToOneField(
+    manager = models.ForeignKey(
         User,
         related_name="manager",
         on_delete=models.SET_NULL,
