@@ -13,6 +13,7 @@ from django.core.files.storage import default_storage
 from django.db import DatabaseError, connection, transaction
 from django.utils import timezone
 from rest_framework import status
+from songs.models import Song
 
 from core.utils.exceptions import CustomAPIException
 from core.utils.response import error_response, success_response
@@ -119,9 +120,9 @@ class AlbumService:
                 title = payload.get("title")
                 artist_id = payload.get("artist")
                 cover_image_file = payload.get("cover_image")
-                total_tracks = payload.get("total_tracks")
+                total_tracks = payload.get("total_tracks", 0)
                 release_date = payload.get("release_date")
-                album_type = payload.get("album_type")
+                album_type = payload.get("album_type", "single")
                 created_at = timezone.now()
                 updated_at = timezone.now()
 
@@ -139,7 +140,11 @@ class AlbumService:
                     raise ValueError("Invalid artist ID")
 
                 cover_image_path = None
-                if cover_image_file:
+                if (
+                    cover_image_file
+                    and cover_image_file != {}
+                    and cover_image_file != ""
+                ):
                     filename = f"albums/{str(id).split('-')[0]}_{cover_image_file.name}"
                     cover_image_path = default_storage.save(
                         filename, ContentFile(cover_image_file.read())
@@ -199,6 +204,7 @@ class AlbumService:
         )
 
     def update(self, payload, album_id):
+        song_count = Song.objects.filter(album=album_id).count()
         try:
             with connection.cursor() as c:
                 old_dict = fetch_album(id=album_id)
@@ -236,12 +242,27 @@ class AlbumService:
                 if not result:
                     raise ValueError("Invalid artist ID")
 
-                if cover_image_file:
+                if (
+                    cover_image_file
+                    and cover_image_file != {}
+                    and cover_image_file != ""
+                ):
                     cover_image_path = None
                     filename = f"albums/{str(id).split('-')[0]}_{cover_image_file.name}"
                     cover_image_path = default_storage.save(
                         filename, ContentFile(cover_image_file.read())
                     )
+
+                if song_count == 1 or song_count == 0:
+                    album_type = "single"
+                    total_tracks = song_count
+                elif song_count > 1 and song_count < 5:
+                    album_type = "ep"
+                    total_tracks = song_count
+
+                elif song_count > 4:
+                    album_type = "album"
+                    total_tracks = song_count
 
                 c.execute(
                     """UPDATE albums_album SET title=%s, artist_id=%s, cover_image=%s, total_tracks=%s, release_date=%s, album_type=%s, created_at=%s, updated_at=%s

@@ -9,9 +9,11 @@ class Album(BaseModel):
     title = models.CharField(max_length=255)
     artist = models.ForeignKey(Artist, related_name="albums", on_delete=models.CASCADE)
     cover_image = models.ImageField(upload_to="albums/", null=True, blank=True)
-    total_tracks = models.PositiveIntegerField(default=0)
+    total_tracks = models.PositiveIntegerField(default=0, blank=True, null=True)
     release_date = models.DateField()
-    album_type = models.CharField(choices=AlbumChoices, default=AlbumChoices.SINGLE)
+    album_type = models.CharField(
+        choices=AlbumChoices, default=AlbumChoices.SINGLE, blank=True, null=True
+    )
 
     def __str__(self):
         return self.title

@@ -74,12 +74,6 @@ class UserService:
             updated_at = timezone.now()
 
             artists_json = payload.get("artist", "")
-            print(not artists_json)
-
-            # artists_dict = {}
-            # if artists_json:
-            #     artists_dict = json.loads(artists_json)
-            #     print(artists_dict)
 
             with connection.cursor() as c:
                 c.execute(
@@ -107,7 +101,6 @@ class UserService:
 
             if user.get("role") == "ARTIST":
                 if not artists_json:
-                    print("bruh")
                     create_profile(artist=None, user=user)
                 else:
                     create_profile(artist=artists_json, user=user)
