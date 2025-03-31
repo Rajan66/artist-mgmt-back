@@ -16,6 +16,8 @@ class ArtistSerializer(serializers.Serializer):
     address = serializers.CharField()
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField()
+    profile_image = serializers.CharField()
+    cover_image = serializers.CharField()
 
 
 class AlbumArtistSerializer(serializers.Serializer):
