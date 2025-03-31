@@ -1,8 +1,7 @@
-import uuid
-
 from django.db import DatabaseError, IntegrityError, connection
 from django.utils import timezone
 from rest_framework import status
+from users.models.user import CustomUser as User
 from users.serializers import UserSerializer
 from users.utils import create_profile
 
@@ -63,52 +62,37 @@ class UserService:
 
     def create(self, payload):
         try:
-            id = uuid.uuid4()
             email = payload.get("email")
             password = payload.get("password")
-            role = payload.get("role")
-            is_active = payload.get("is_active", False)
-            is_staff = payload.get("is_staff", False)
-            is_superuser = payload.get("is_superuser", False)
-            date_joined = timezone.now()
-            updated_at = timezone.now()
+            role = payload.get("role").lower()
 
             artists_json = payload.get("artist", "")
+            if role not in ["artist", "artist_manager", "super_admin"]:
+                raise Exception("Invalid role. Please check the role again.")
 
-            with connection.cursor() as c:
-                c.execute(
-                    """INSERT INTO users_customuser (id, email, password, role, is_active, is_staff, is_superuser, date_joined, updated_at) 
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING *;
-                    """,
-                    [
-                        id,
-                        email,
-                        password,
-                        role,
-                        is_active,
-                        is_staff,
-                        is_superuser,
-                        date_joined,
-                        updated_at,
-                    ],
-                )
-                result = c.fetchone()
-                columns = [col[0] for col in c.description]
+            user_obj = User.objects.create(email=email, role=role)
+            user_obj.set_password(password)
+            user_obj.save()
 
-            user_dicts = dict(zip(columns, result))
-            serializer = UserSerializer(user_dicts)
+            serializer = UserSerializer(user_obj)
             user = serializer.data
 
-            if user.get("role") == "ARTIST":
+            if user.get("role") == "artist":
                 if not artists_json:
-                    create_profile(artist=None, user=user)
+                    success = create_profile(profile=None, user=user)
                 else:
-                    create_profile(artist=artists_json, user=user)
-            elif user.get("role") == "ARTIST_MANAGER" or "SUPER_ADMIN":
-                # create an user profile
-                create_profile(artist=None, user=user)
+                    success = create_profile(profile=artists_json, user=user)
+            elif user.get("role") in ["artist_manager", "super_admin"]:
+                if not artists_json:
+                    success = create_profile(profile=None, user=user)
+                else:
+                    success = create_profile(profile=artists_json, user=user)
             else:
                 raise Exception("Invalid role. Please check the role again.")
+
+            if not success:
+                self.delete(id=user.get("id"))
+                raise Exception("Invalid manager.")
 
             return success_response(
                 user,
