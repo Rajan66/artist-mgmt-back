@@ -1,5 +1,6 @@
 import uuid
 
+from albums.models.album import Album
 from albums.selectors import fetch_album, fetch_albums, fetch_artist_albums
 from albums.serializers.album import (
     AlbumFetchSerializer,
@@ -349,5 +350,26 @@ class AlbumService:
             return error_response(
                 error=str(e),
                 message="Database error",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def get_manager_albums(self, manager_id):
+        try:
+            filtered_albums = Album.objects.filter(
+                artist__manager=manager_id
+            ).prefetch_related("artist")
+
+            albums = AlbumOutputSerializer(filtered_albums, many=True).data
+
+            return success_response(
+                data=albums,
+                message="Albums retrieved successfully",
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            return error_response(
+                error=str(e),
+                message="Failed to fetch albums",
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
