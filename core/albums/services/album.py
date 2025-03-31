@@ -13,6 +13,7 @@ from django.core.files.storage import default_storage
 from django.db import DatabaseError, connection, transaction
 from django.utils import timezone
 from rest_framework import status
+from songs.models import Song
 
 from core.utils.exceptions import CustomAPIException
 from core.utils.response import error_response, success_response
@@ -125,8 +126,6 @@ class AlbumService:
                 created_at = timezone.now()
                 updated_at = timezone.now()
 
-                print(cover_image_file)
-
                 try:
                     uuid.UUID(artist_id, version=4)
                 except ValueError:
@@ -205,6 +204,7 @@ class AlbumService:
         )
 
     def update(self, payload, album_id):
+        song_count = Song.objects.filter(album=album_id).count()
         try:
             with connection.cursor() as c:
                 old_dict = fetch_album(id=album_id)
@@ -252,6 +252,17 @@ class AlbumService:
                     cover_image_path = default_storage.save(
                         filename, ContentFile(cover_image_file.read())
                     )
+
+                if song_count == 1 or song_count == 0:
+                    album_type = "single"
+                    total_tracks = song_count
+                elif song_count > 1 and song_count < 5:
+                    album_type = "ep"
+                    total_tracks = song_count
+
+                elif song_count > 4:
+                    album_type = "album"
+                    total_tracks = song_count
 
                 c.execute(
                     """UPDATE albums_album SET title=%s, artist_id=%s, cover_image=%s, total_tracks=%s, release_date=%s, album_type=%s, created_at=%s, updated_at=%s

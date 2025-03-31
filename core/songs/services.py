@@ -19,7 +19,7 @@ class SongService:
     def get_songs(self):
         try:
             songs_dicts = fetch_songs()
-            serializer = SongSerializer(songs_dicts, many=True)
+            serializer = SongOutputSerializer(songs_dicts, many=True)
             songs = serializer.data
 
         except Exception as e:
