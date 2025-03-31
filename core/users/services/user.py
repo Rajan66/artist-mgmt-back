@@ -6,6 +6,7 @@ from users.serializers import UserSerializer
 from users.utils import create_profile
 
 from core.utils.response import error_response, success_response
+from core.utils.utils import convert_formdata_to_json
 
 
 class UserService:
@@ -66,7 +67,9 @@ class UserService:
             password = payload.get("password")
             role = payload.get("role").lower()
 
-            artists_json = payload.get("artist", "")
+            json = convert_formdata_to_json(payload)
+            artists_json = json.get("artist")
+
             if role not in ["artist", "artist_manager", "super_admin"]:
                 raise Exception("Invalid role. Please check the role again.")
 

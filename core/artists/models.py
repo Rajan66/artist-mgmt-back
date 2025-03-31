@@ -27,6 +27,10 @@ class Artist(Profile):
         validators=[MinValueValidator(1980), max_value_current_year],
     )
     no_of_albums_released = models.PositiveIntegerField(default=0)
+    profile_image = models.ImageField(
+        upload_to="artists/profile", null=True, blank=True
+    )
+    cover_image = models.ImageField(upload_to="artists/cover", null=True, blank=True)
 
     class Meta:
         verbose_name = "Artist Profile"
