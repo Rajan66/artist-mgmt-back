@@ -8,7 +8,6 @@ from albums.serializers.album import (
 )
 from artists.selectors import fetch_artist
 from artists.serializers import AlbumArtistSerializer
-from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.db import DatabaseError, connection, transaction
@@ -41,8 +40,6 @@ class AlbumService:
                 serializer = AlbumArtistSerializer(artist_dict)
                 album["artist"] = serializer.data
 
-            if album.get("cover_image"):
-                album["cover_image"] = f"{settings.MEDIA_URL}{album['cover_image']}"
             serializer = AlbumOutputSerializer(albums_dicts, many=True)
             albums = serializer.data
 
@@ -73,10 +70,6 @@ class AlbumService:
             serializer = AlbumArtistSerializer(artist_dict)
             album_dict["artist"] = serializer.data
 
-            if album_dict.get("cover_image"):
-                album_dict["cover_image"] = (
-                    f"{settings.MEDIA_URL}{album_dict['cover_image']}"
-                )
             serializer = AlbumOutputSerializer(album_dict)
             albums = serializer.data
 
@@ -171,11 +164,6 @@ class AlbumService:
                 columns = [col[0] for col in c.description]
 
             album_dict = dict(zip(columns, result))
-
-            if album_dict.get("cover_image"):
-                album_dict["cover_image"] = (
-                    f"{settings.MEDIA_URL}{album_dict['cover_image']}"
-                )
 
             artist_dict = fetch_artist(id=artist_id)
             artist_serializer = AlbumArtistSerializer(artist_dict)
@@ -288,11 +276,6 @@ class AlbumService:
                     columns.append(col[0])
 
             album_dict = dict(zip(columns, result))
-
-            if album_dict.get("cover_image"):
-                album_dict["cover_image"] = (
-                    f"{settings.MEDIA_URL}{album_dict['cover_image']}"
-                )
 
             # artist_dict = fetch_artist(id=artist_id)
             # serializer = AlbumArtistSerializer(artist_dict)
