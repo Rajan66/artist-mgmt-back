@@ -13,6 +13,7 @@ class BaseSongSerializer(serializers.Serializer):
 
 class SongSerializer(BaseSongSerializer, serializers.Serializer):
     album_id = serializers.CharField(source="album")
+    cover_image = serializers.CharField(required=False)
 
 
 class SongOutputSerializer(BaseSongSerializer, serializers.Serializer):
