@@ -1,7 +1,7 @@
 import uuid
 
 from albums.models.album import Album
-from albums.selectors import fetch_album, fetch_albums, fetch_artist_albums
+from albums.selectors import fetch_album, fetch_albums
 from albums.serializers.album import (
     AlbumFetchSerializer,
     AlbumOutputSerializer,
@@ -88,10 +88,9 @@ class AlbumService:
 
     def get_artist_albums(self, id):
         try:
-            albums_dicts = fetch_artist_albums(id=id)
-            print(albums_dicts)
+            filtered_albums = Album.objects.filter(artist=id)
 
-            serializer = AlbumFetchSerializer(albums_dicts, many=True)
+            serializer = AlbumFetchSerializer(filtered_albums, many=True)
             albums = serializer.data
 
         except Exception as e:
