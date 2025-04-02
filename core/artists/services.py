@@ -68,14 +68,6 @@ class ArtistService:
 
                 artist_dict = dict(zip(columns, result))
 
-                if artist_dict.get("cover_image"):
-                    artist_dict["cover_image"] = (
-                        f"{settings.MEDIA_URL}{artist_dict['cover_image']}"
-                    )
-                if artist_dict.get("profile_image"):
-                    artist_dict["profile_image"] = (
-                        f"{settings.MEDIA_URL}{artist_dict['profile_image']}"
-                    )
                 user_id = artist_dict.get("user_id")
 
                 c.execute(
@@ -202,15 +194,6 @@ class ArtistService:
 
             artist_dicts = dict(zip(columns, result))
 
-            if artist_dicts.get("cover_image"):
-                artist_dicts["cover_image"] = (
-                    f"{settings.MEDIA_URL}{artist_dicts['cover_image']}"
-                )
-            if artist_dicts.get("profile_image"):
-                artist_dicts["profile_image"] = (
-                    f"{settings.MEDIA_URL}{artist_dicts['profile_image']}"
-                )
-
             user_dicts = fetch_user(artist_dicts)
             serializer = UserOutputSerializer(user_dicts)
             artist_dicts["user"] = serializer.data
@@ -300,7 +283,7 @@ class ArtistService:
 
                 c.execute(
                     """UPDATE artists_artist SET 
-                    name=%s, first_release_year=%s, no_of_albums_released=%s, first_name=%s, last_name=%s, dob=%s, gender=%s, address=%s,  updated_at=%s, profile_image, cover_image 
+                    name=%s, first_release_year=%s, no_of_albums_released=%s, first_name=%s, last_name=%s, dob=%s, gender=%s, address=%s,  updated_at=%s, profile_image=%s, cover_image=%s 
                     WHERE id=%s RETURNING *;
                     """,
                     [
@@ -327,14 +310,6 @@ class ArtistService:
                     columns.append(col[0])
 
             artist_dict = dict(zip(columns, result))
-            if artist_dict.get("cover_image"):
-                artist_dict["cover_image"] = (
-                    f"{settings.MEDIA_URL}{artist_dict['cover_image']}"
-                )
-            if artist_dict.get("profile_image"):
-                artist_dict["profile_image"] = (
-                    f"{settings.MEDIA_URL}{artist_dict['profile_image']}"
-                )
 
             print(artist_dict)
 

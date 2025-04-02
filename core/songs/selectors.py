@@ -81,7 +81,7 @@ def fetch_artist_songs(artist_id):
         with connection.cursor() as c:
             c.execute(
                 """
-                SELECT s.title, s.genre, s.release_date, a.id AS album_id, ar.id AS artist_id 
+                SELECT s.id,s.title, s.genre, s.release_date,s.created_at,s.updated_at, a.id AS album_id 
                 FROM songs_song s
                 JOIN albums_album a ON a.id = s.album_id
                 JOIN artists_artist ar ON ar.id = a.artist_id
@@ -97,8 +97,18 @@ def fetch_artist_songs(artist_id):
             columns = [col[0] for col in c.description]
 
             songs_dicts = [dict(zip(columns, row)) for row in results]
+            album_ids = {song["album_id"] for song in songs_dicts}
+
+            # Fetch all required albums in a single query
+            albums = {
+                album.id: album for album in Album.objects.filter(id__in=album_ids)
+            }
+
+            # Assign albums to songs using dictionary lookup (O(1) operation)
             for song in songs_dicts:
-                song["album"] = song["album_id"]
+                song["album"] = albums.get(song["album_id"]).id
+                song["cover_image"] = albums.get(song["album_id"]).cover_image
+                print(song)
 
             return songs_dicts
 

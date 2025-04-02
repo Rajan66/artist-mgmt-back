@@ -77,8 +77,8 @@ class SongService:
     def get_artist_songs(self, artist_id):
         try:
             song_dicts = fetch_artist_songs(artist_id=artist_id)
-            serializer = SongOutputSerializer(song_dicts, many=True)
-            song = serializer.data
+            serializer = SongSerializer(song_dicts, many=True)
+            songs = serializer.data
 
         except Exception as e:
             return error_response(
@@ -88,7 +88,7 @@ class SongService:
             )
 
         return success_response(
-            data=song,
+            data=songs,
             message="Song retrieved successfully",
             status=status.HTTP_200_OK,
         )
