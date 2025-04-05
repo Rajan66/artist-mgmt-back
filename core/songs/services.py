@@ -1,5 +1,6 @@
 import uuid
 
+from albums.models.album import Album
 from albums.selectors import check_album
 from django.db import DatabaseError, connection
 from django.utils import timezone
@@ -133,6 +134,23 @@ class SongService:
                 serializer = SongSerializer(song_dicts)
                 song = serializer.data
 
+                album = Album.objects.get(id=album_id)
+                song_count = Song.objects.filter(album=album.id).count()
+
+                if song_count == 1 or song_count == 0:
+                    album.album_type = "single"
+                    album.total_tracks = song_count
+
+                elif song_count > 1 and song_count < 5:
+                    album.album_type = "ep"
+                    album.total_tracks = song_count
+
+                elif song_count > 4:
+                    album.album_type = "album"
+                    album.total_tracks = song_count
+
+                album.save()
+
                 return success_response(
                     data=song,
                     message="Song created successfully",
@@ -207,6 +225,9 @@ class SongService:
 
     def delete(self, id):
         try:
+            song = Song.objects.get(id=id)
+            album = Album.objects.get(id=song.album.id)
+
             with connection.cursor() as c:
                 c.execute(
                     "DELETE FROM songs_song WHERE id=%s RETURNING TRUE;",
@@ -220,6 +241,21 @@ class SongService:
                         message="Album does not exist",
                         status=status.HTTP_404_NOT_FOUND,
                     )
+            song_count = Song.objects.filter(album=album.id).count()
+
+            if song_count == 1 or song_count == 0:
+                album.album_type = "single"
+                album.total_tracks = song_count
+
+            elif song_count > 1 and song_count < 5:
+                album.album_type = "ep"
+                album.total_tracks = song_count
+
+            elif song_count > 4:
+                album.album_type = "album"
+                album.total_tracks = song_count
+
+            album.save()
 
             return success_response(
                 message="Song deleted successfully",

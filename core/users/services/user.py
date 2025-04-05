@@ -68,7 +68,8 @@ class UserService:
             role = payload.get("role").lower()
 
             json = convert_formdata_to_json(payload)
-            artists_json = json.get("artist")
+            artists_json = json.get("artist") or json.get("manager")
+            print(artists_json)
 
             if role not in ["artist", "artist_manager", "super_admin"]:
                 raise Exception("Invalid role. Please check the role again.")
