@@ -1,9 +1,11 @@
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
+from users.services.user import UserService
 
 from authentication.services import AuthService
 
 auth_service = AuthService()
+user_service = UserService()
 
 
 class UserLoginView(APIView):
@@ -21,6 +23,15 @@ class UserRegisterView(APIView):
 
     def post(self, request):
         response = auth_service.register(request)
+        return response
+
+
+class UserCreateView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        response = user_service.create(payload=request.data)
         return response
 
 
