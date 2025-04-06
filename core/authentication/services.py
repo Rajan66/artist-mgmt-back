@@ -69,6 +69,7 @@ class AuthService:
         data = {
             "id": user.id,
             "email": user.email,
+            "role": user.role,
             "access_token": tokens[0],
             "refresh_token": tokens[1],
         }
