@@ -29,6 +29,12 @@ class ArtistDetailView(APIView):
         return response
 
 
+class ArtistUserView(APIView):
+    def get(self, request, user_id):
+        response = aritst_service.get_artist_with_user(id=user_id)
+        return response
+
+
 class ManagerArtistView(APIView):
     def get(self, request, manager_id):
         response = aritst_service.get_manager_artists(manager_id=manager_id)

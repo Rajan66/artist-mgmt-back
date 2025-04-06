@@ -21,7 +21,6 @@ class Artist(Profile):
         null=True,
         default=None,
     )
-    name = models.CharField(unique=True, verbose_name="artist name")
     first_release_year = models.PositiveIntegerField(
         default=current_year(),
         validators=[MinValueValidator(1980), max_value_current_year],
