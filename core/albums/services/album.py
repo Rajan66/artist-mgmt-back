@@ -90,7 +90,7 @@ class AlbumService:
         try:
             filtered_albums = Album.objects.filter(artist=id)
 
-            serializer = AlbumFetchSerializer(filtered_albums, many=True)
+            serializer = AlbumOutputSerializer(filtered_albums, many=True)
             albums = serializer.data
 
         except Exception as e:
@@ -213,7 +213,8 @@ class AlbumService:
                 album_type = payload.get("album_type", old_album.get("album_type"))
                 created_at = old_album.get("created_at")
                 updated_at = timezone.now()
-
+                print(cover_image_file)
+                print(cover_image_path)
                 try:
                     uuid.UUID(artist_id, version=4)
                 except ValueError:
@@ -234,6 +235,7 @@ class AlbumService:
                     cover_image_file
                     and cover_image_file != {}
                     and cover_image_file != ""
+                    and cover_image_file != "undefined"
                 ):
                     cover_image_path = None
                     filename = f"albums/{str(id).split('-')[0]}_{cover_image_file.name}"
@@ -279,6 +281,7 @@ class AlbumService:
             # artist_dict = fetch_artist(id=artist_id)
             # serializer = AlbumArtistSerializer(artist_dict)
             album_dict["artist"] = album_dict.get("artist_id")
+            print(album_dict)
 
             serializer = AlbumFetchSerializer(album_dict)
             album = serializer.data
