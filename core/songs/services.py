@@ -10,7 +10,6 @@ from core.utils.response import error_response, success_response
 from songs.models import Song
 from songs.selectors import (
     fetch_album_songs,
-    fetch_artist_songs,
     fetch_song,
     fetch_songs,
 )
@@ -77,8 +76,10 @@ class SongService:
 
     def get_artist_songs(self, artist_id):
         try:
-            song_dicts = fetch_artist_songs(artist_id=artist_id)
-            serializer = SongSerializer(song_dicts, many=True)
+            filtered_songs = Song.objects.prefetch_related("album__artist").filter(
+                album__artist__id=artist_id
+            )
+            serializer = SongOutputSerializer(filtered_songs, many=True)
             songs = serializer.data
 
         except Exception as e:

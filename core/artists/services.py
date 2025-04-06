@@ -139,7 +139,12 @@ class ArtistService:
 
             cover_image_path = None
             profile_image_path = None
-            if cover_image_file and cover_image_file != {} and cover_image_file != "":
+            if (
+                cover_image_file
+                and cover_image_file != {}
+                and cover_image_file != ""
+                and cover_image_file != "undefined"
+            ):
                 filename = (
                     f"artists/cover/{str(id).split('-')[0]}_{cover_image_file.name}"
                 )
@@ -151,6 +156,7 @@ class ArtistService:
                 profile_image_file
                 and profile_image_file != {}
                 and profile_image_file != ""
+                and profile_image_file != "undefined"
             ):
                 filename = (
                     f"artists/profile/{str(id).split('-')[0]}_{profile_image_file.name}"
@@ -261,6 +267,7 @@ class ArtistService:
                     cover_image_file
                     and cover_image_file != {}
                     and cover_image_file != ""
+                    and cover_image_file != "undefined"
                 ):
                     cover_image_path = None
                     filename = (
@@ -274,6 +281,7 @@ class ArtistService:
                     profile_image_file
                     and profile_image_file != {}
                     and profile_image_file != ""
+                    and profile_image_file != "undefined"
                 ):
                     profile_image_path = None
                     filename = f"artists/profile/{str(id).split('-')[0]}_{profile_image_file.name}"
@@ -369,6 +377,25 @@ class ArtistService:
 
             return success_response(
                 data=artists,
+                message="Artists retrieved successfully",
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            return error_response(
+                error=str(e),
+                message="Failed to fetch artists",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def get_artist_with_user(self, id):
+        try:
+            filtered_artists = Artist.objects.filter(user=id).first()
+
+            artist = ArtistSerializer(filtered_artists).data
+
+            return success_response(
+                data=artist,
                 message="Artists retrieved successfully",
                 status=status.HTTP_200_OK,
             )
