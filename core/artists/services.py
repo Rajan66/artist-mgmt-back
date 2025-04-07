@@ -125,7 +125,7 @@ class ArtistService:
                     user = User.objects.get(id=manager_id)
 
                     if user.role == "super_admin":
-                        manager_id = None  # just nullify and continue
+                        manager_id = None
                     elif user.role != "artist_manager":
                         raise ValidationError(
                             "Invalid manager ID or the user is not a manager."

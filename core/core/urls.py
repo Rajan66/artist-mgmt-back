@@ -29,6 +29,7 @@ urlpatterns = [
     path(f"{api_prefix}/artists/", include("artists.urls")),
     path(f"{api_prefix}/albums/", include("albums.urls")),
     path(f"{api_prefix}/songs/", include("songs.urls")),
+    path(f"{api_prefix}/stats/", include("stats.urls")),
     # Swagger paths
     path(
         "swagger.<format>/",

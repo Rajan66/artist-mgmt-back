@@ -6,6 +6,7 @@ from albums.serializers.album import (
     AlbumFetchSerializer,
     AlbumOutputSerializer,
 )
+from artists.models import Artist
 from artists.selectors import fetch_artist
 from artists.serializers import AlbumArtistSerializer
 from django.core.files.base import ContentFile
@@ -127,6 +128,7 @@ class AlbumService:
                         code=status.HTTP_400_BAD_REQUEST,
                     )
 
+                artist = Artist.objects.get(id=artist_id)
                 c.execute("SELECT name FROM artists_artist WHERE id=%s", [artist_id])
                 result = c.fetchone()
                 if not result:
@@ -170,6 +172,9 @@ class AlbumService:
 
             album_serializer = AlbumFetchSerializer(album_dict)
             album = album_serializer.data
+
+            artist.no_of_albums_released += 1
+            artist.save()
 
         except ValueError as e:
             raise CustomAPIException(
@@ -310,21 +315,33 @@ class AlbumService:
             with transaction.atomic():
                 with connection.cursor() as c:
                     c.execute(
-                        "DELETE FROM songs_song WHERE album_id=%s RETURNING TRUE",
+                        "SELECT artist_id FROM albums_album WHERE id=%s",
                         [id],
                     )
-                    c.execute(
-                        "DELETE FROM albums_album WHERE id=%s RETURNING TRUE;",
-                        [id],
-                    )
-                    result = c.fetchone()
+                    artist_row = c.fetchone()
 
-                    if not result:
+                    if not artist_row:
                         return error_response(
                             error="Invalid album ID",
                             message="Album does not exist",
                             status=status.HTTP_404_NOT_FOUND,
                         )
+
+                    artist_id = artist_row[0]
+
+                    c.execute(
+                        "DELETE FROM songs_song WHERE album_id=%s RETURNING TRUE",
+                        [id],
+                    )
+
+                    c.execute(
+                        "DELETE FROM albums_album WHERE id=%s RETURNING TRUE;",
+                        [id],
+                    )
+
+            artist = Artist.objects.get(id=artist_id)
+            artist.no_of_albums_released = max(0, artist.no_of_albums_released - 1)
+            artist.save()
 
             return success_response(
                 message="Album deleted successfully",
