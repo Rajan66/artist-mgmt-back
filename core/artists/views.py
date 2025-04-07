@@ -39,3 +39,15 @@ class ManagerArtistView(APIView):
     def get(self, request, manager_id):
         response = aritst_service.get_manager_artists(manager_id=manager_id)
         return response
+
+
+class ArtistHardDeleteView(APIView):
+    def hard_delete(self, request, pk):
+        response = aritst_service.hard_delete(id=pk)
+        return response
+
+
+class ArtistSoftDeleteView(APIView):
+    def soft_delete(self, request, pk):
+        response = aritst_service.soft_delete(id=pk)
+        return response
