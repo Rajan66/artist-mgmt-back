@@ -26,3 +26,15 @@ class ProfileDetailView(APIView):
     def delete(self, request, user_id):
         response = user_profile_service.delete(id=user_id)
         return response
+
+
+class ProfileHardDeleteView(APIView):
+    def hard_delete(self, request, pk):
+        response = user_profile_service.hard_delete(id=pk)
+        return response
+
+
+class ProfileSoftDeleteView(APIView):
+    def soft_delete(self, request, pk):
+        response = user_profile_service.soft_delete(id=pk)
+        return response

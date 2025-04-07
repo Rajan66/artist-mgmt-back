@@ -68,14 +68,21 @@ class UserService:
             role = payload.get("role").lower()
 
             json = convert_formdata_to_json(payload)
-            artists_json = json.get("artist") or json.get("manager")
-            print(artists_json)
+            artists_json = (
+                json.get("artist") or json.get("manager") or json.get("admin")
+            )
 
             if role not in ["artist", "artist_manager", "super_admin"]:
                 raise Exception("Invalid role. Please check the role again.")
 
-            user_obj = User.objects.create(email=email, role=role)
-            user_obj.set_password(password)
+            if role == "super_admin":
+                user_obj = User.objects.create_superuser(
+                    email=email, password=password, role=role
+                )
+            else:
+                user_obj = User.objects.create(email=email, role=role)
+                user_obj.set_password(password)
+
             user_obj.save()
 
             serializer = UserSerializer(user_obj)
