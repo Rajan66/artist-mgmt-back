@@ -29,12 +29,18 @@ class ProfileDetailView(APIView):
 
 
 class ProfileHardDeleteView(APIView):
-    def hard_delete(self, request, pk):
+    def delete(self, request, pk):
         response = user_profile_service.hard_delete(id=pk)
         return response
 
 
 class ProfileSoftDeleteView(APIView):
-    def soft_delete(self, request, pk):
+    def delete(self, request, pk):
         response = user_profile_service.soft_delete(id=pk)
+        return response
+
+
+class ProfileUnbanView(APIView):
+    def put(self, request, pk):
+        response = user_profile_service.unban_user(id=pk)
         return response

@@ -248,9 +248,10 @@ class UserProfileService:
             manager = UserProfile.objects.get(id=id)
             user = manager.user
             user.is_active = False
+            user.save()
 
             return success_response(
-                message="Artist deleted successfully",
+                message="Manager deleted successfully",
                 status=status.HTTP_204_NO_CONTENT,
             )
 
@@ -270,7 +271,26 @@ class UserProfileService:
             user.delete()
 
             return success_response(
-                message="Artist deleted successfully",
+                message="Manager deleted successfully",
+                status=status.HTTP_204_NO_CONTENT,
+            )
+
+        except DatabaseError as e:
+            return error_response(
+                error=str(e),
+                message="Database error",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def unban_user(self, id):
+        try:
+            manager = UserProfile.objects.get(id=id)
+            user = manager.user
+            user.is_active = True
+            user.save()
+
+            return success_response(
+                message="Manager unbanned successfully",
                 status=status.HTTP_204_NO_CONTENT,
             )
 
