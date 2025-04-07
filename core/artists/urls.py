@@ -5,6 +5,7 @@ from artists.views import (
     ArtistHardDeleteView,
     ArtistListView,
     ArtistSoftDeleteView,
+    ArtistUnbanView,
     ArtistUserView,
     ManagerArtistView,
 )
@@ -19,6 +20,11 @@ urlpatterns = [
         "<str:pk>/delete/soft/",
         ArtistSoftDeleteView.as_view(),
         name="artist-soft-delete",
+    ),
+    path(
+        "<str:pk>/unban/",
+        ArtistUnbanView.as_view(),
+        name="artist-unban",
     ),
     path("<str:pk>/", ArtistDetailView.as_view(), name="artist-detail"),
     path("users/<str:user_id>/", ArtistUserView.as_view(), name="artist-user"),

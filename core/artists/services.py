@@ -121,13 +121,18 @@ class ArtistService:
             profile_image_file = payload.get("profile_image")
 
             if manager_id:
-                check_manager = User.objects.filter(
-                    id=manager_id, role="artist_manager"
-                ).exists()
-                if not check_manager:
-                    raise ValidationError(
-                        "Invalid manager ID or the user is not a manager."
-                    )
+                try:
+                    user = User.objects.get(id=manager_id)
+
+                    if user.role == "super_admin":
+                        manager_id = None  # just nullify and continue
+                    elif user.role != "artist_manager":
+                        raise ValidationError(
+                            "Invalid manager ID or the user is not a manager."
+                        )
+
+                except User.DoesNotExist:
+                    raise ValidationError("Invalid manager ID. User does not exist.")
 
             cover_image_path = None
             profile_image_path = None
@@ -338,6 +343,7 @@ class ArtistService:
             artist = Artist.objects.get(id=id)
             user = artist.user
             user.is_active = False
+            user.save()
 
             return success_response(
                 message="Artist deleted successfully",
@@ -351,21 +357,49 @@ class ArtistService:
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+    def unban_artist(self, id):
+        try:
+            artist = Artist.objects.get(id=id)
+            user = artist.user
+
+            user.is_active = True
+            user.save()
+
+            return success_response(
+                message="Artist unbanned successfully",
+                status=status.HTTP_204_NO_CONTENT,
+            )
+
+        except DatabaseError as e:
+            return error_response(
+                error=str(e),
+                message="Database error",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
     def hard_delete(self, id):
         try:
             artist = Artist.objects.get(id=id)
-            user = artist
-            album = Album.objects.get(artist=id)
-            song = Song.objects.get(album=album.id)
+            user = artist.user
 
-            song.delete()
-            album.delete()
+            albums = Album.objects.filter(artist=id)
+            for album in albums:
+                Song.objects.filter(album=album.id).delete()
+
+            albums.delete()
+
             artist.delete()
             user.delete()
 
             return success_response(
-                message="Artist deleted successfully",
+                message="Artist and related data deleted successfully",
                 status=status.HTTP_204_NO_CONTENT,
+            )
+
+        except Artist.DoesNotExist:
+            return error_response(
+                message="Artist not found",
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         except DatabaseError as e:

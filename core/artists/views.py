@@ -42,12 +42,18 @@ class ManagerArtistView(APIView):
 
 
 class ArtistHardDeleteView(APIView):
-    def hard_delete(self, request, pk):
+    def delete(self, request, pk):
         response = aritst_service.hard_delete(id=pk)
         return response
 
 
 class ArtistSoftDeleteView(APIView):
-    def soft_delete(self, request, pk):
+    def delete(self, request, pk):
         response = aritst_service.soft_delete(id=pk)
+        return response
+
+
+class ArtistUnbanView(APIView):
+    def put(self, request, pk):
+        response = aritst_service.unban_artist(id=pk)
         return response
