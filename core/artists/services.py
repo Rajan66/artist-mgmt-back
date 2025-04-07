@@ -1,12 +1,13 @@
 import uuid
 
-from django.conf import settings
+from albums.models import Album
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.db import DatabaseError, connection
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
+from songs.models import Song
 from users.models.user import CustomUser as User
 from users.selectors import fetch_user
 from users.serializers import UserOutputSerializer
@@ -27,15 +28,6 @@ class ArtistService:
                 user_dicts = fetch_user(artist)
                 serializer = UserOutputSerializer(user_dicts)
                 artist["user"] = serializer.data
-
-                if artist.get("cover_image"):
-                    artist["cover_image"] = (
-                        f"{settings.MEDIA_URL}{artist['cover_image']}"
-                    )
-                if artist.get("profile_image"):
-                    artist["profile_image"] = (
-                        f"{settings.MEDIA_URL}{artist['profile_image']}"
-                    )
 
             serializer = ArtistSerializer(artist_dicts, many=True)
             artists = serializer.data
@@ -341,6 +333,48 @@ class ArtistService:
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+    def soft_delete(self, id):
+        try:
+            artist = Artist.objects.get(id=id)
+            user = artist.user
+            user.is_active = False
+
+            return success_response(
+                message="Artist deleted successfully",
+                status=status.HTTP_204_NO_CONTENT,
+            )
+
+        except DatabaseError as e:
+            return error_response(
+                error=str(e),
+                message="Database error",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def hard_delete(self, id):
+        try:
+            artist = Artist.objects.get(id=id)
+            user = artist
+            album = Album.objects.get(artist=id)
+            song = Song.objects.get(album=album.id)
+
+            song.delete()
+            album.delete()
+            artist.delete()
+            user.delete()
+
+            return success_response(
+                message="Artist deleted successfully",
+                status=status.HTTP_204_NO_CONTENT,
+            )
+
+        except DatabaseError as e:
+            return error_response(
+                error=str(e),
+                message="Database error",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
     def delete(self, id):
         try:
             with connection.cursor() as c:
@@ -356,7 +390,6 @@ class ArtistService:
                         message="Artist does not exist",
                         status=status.HTTP_404_NOT_FOUND,
                     )
-
             return success_response(
                 message="Artist deleted successfully",
                 status=status.HTTP_204_NO_CONTENT,
