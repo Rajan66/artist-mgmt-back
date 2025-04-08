@@ -11,7 +11,7 @@ class UserListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        response = user_service.get_users()
+        response = user_service.get_users(request=request)
         return response
 
     def post(self, request):

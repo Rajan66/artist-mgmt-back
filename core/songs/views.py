@@ -11,7 +11,7 @@ class SongListView(APIView):
     authentication_classes = []
 
     def get(self, request):
-        response = song_service.get_songs()
+        response = song_service.get_songs(request=request)
         return response
 
     def post(self, request):
@@ -35,17 +35,19 @@ class SongDetailView(APIView):
 
 class ArtistSongView(APIView):
     def get(self, request, pk):
-        response = song_service.get_artist_songs(artist_id=pk)
+        response = song_service.get_artist_songs(artist_id=pk, request=request)
         return response
 
 
 class AlbumSongView(APIView):
     def get(self, request, pk):
-        response = song_service.get_album_songs(album_id=pk)
+        response = song_service.get_album_songs(album_id=pk, request=request)
         return response
 
 
 class ManagerSongView(APIView):
     def get(self, request, manager_id):
-        response = song_service.get_manager_songs(manager_id=manager_id)
+        response = song_service.get_manager_songs(
+            manager_id=manager_id, request=request
+        )
         return response
