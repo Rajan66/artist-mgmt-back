@@ -14,10 +14,11 @@ from songs.selectors import (
     fetch_songs,
 )
 from songs.serializers import SongOutputSerializer, SongSerializer
+from songs.validators import validate_release
 
 
 class SongService:
-    def get_songs(self):
+    def get_songs(self, request):
         try:
             songs_dicts = fetch_songs()
             serializer = SongOutputSerializer(songs_dicts, many=True)
@@ -34,6 +35,7 @@ class SongService:
             data=songs,
             message="Songs retrieved successfully",
             status=status.HTTP_200_OK,
+            request=request,
         )
 
     def get_song(self, id):
@@ -55,7 +57,7 @@ class SongService:
             status=status.HTTP_200_OK,
         )
 
-    def get_album_songs(self, album_id):
+    def get_album_songs(self, album_id, request):
         try:
             songs_dicts = fetch_album_songs(album_id=album_id)
             serializer = SongSerializer(songs_dicts, many=True)
@@ -72,9 +74,10 @@ class SongService:
             data=songs,
             message="Songs retrieved successfully",
             status=status.HTTP_200_OK,
+            request=request,
         )
 
-    def get_artist_songs(self, artist_id):
+    def get_artist_songs(self, artist_id, request):
         try:
             filtered_songs = Song.objects.prefetch_related("album__artist").filter(
                 album__artist__id=artist_id
@@ -93,6 +96,7 @@ class SongService:
             data=songs,
             message="Song retrieved successfully",
             status=status.HTTP_200_OK,
+            request=request,
         )
 
     def create(self, payload):
@@ -107,6 +111,7 @@ class SongService:
                 updated_at = timezone.now()
 
                 check_album(id=album_id)
+                validate_release(album_id, release_date)
 
                 c.execute(
                     """INSERT INTO songs_song (id, title, album_id, release_date, genre, created_at, updated_at) values
@@ -270,7 +275,7 @@ class SongService:
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    def get_manager_songs(self, manager_id):
+    def get_manager_songs(self, manager_id, request):
         try:
             filtered_songs = Song.objects.prefetch_related("album__artist").filter(
                 album__artist__manager_id=manager_id
@@ -282,6 +287,7 @@ class SongService:
                 data=songs,
                 message="Songs retrieved successfully",
                 status=status.HTTP_200_OK,
+                request=request,
             )
 
         except Exception as e:
@@ -289,4 +295,5 @@ class SongService:
                 error=str(e),
                 message="Failed to fetch songs",
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                request=request,
             )

@@ -6,7 +6,7 @@ user_profile_service = UserProfileService()
 
 class ProfileListView(APIView):
     def get(self, request):
-        response = user_profile_service.get_profiles()
+        response = user_profile_service.get_profiles(request=request)
         return response
 
 

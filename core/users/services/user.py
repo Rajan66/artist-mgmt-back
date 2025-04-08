@@ -10,7 +10,7 @@ from core.utils.utils import convert_formdata_to_json
 
 
 class UserService:
-    def get_users(self):
+    def get_users(self, request):
         try:
             with connection.cursor() as c:
                 c.execute("SELECT * FROM users_customuser")
@@ -24,6 +24,7 @@ class UserService:
                 serializer.data,
                 message="Users found successfully",
                 status=status.HTTP_200_OK,
+                request=request,
             )
         except DatabaseError as e:
             return error_response(
@@ -103,7 +104,7 @@ class UserService:
 
             if not success:
                 self.delete(id=user.get("id"))
-                raise Exception("Invalid manager.")
+                raise Exception("Something went wrong")
 
             return success_response(
                 user,

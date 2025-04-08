@@ -6,7 +6,7 @@ album_service = AlbumService()
 
 class AlbumListView(APIView):
     def get(self, request):
-        response = album_service.get_albums()
+        response = album_service.get_albums(request=request)
         return response
 
     def post(self, request):
@@ -30,11 +30,13 @@ class AlbumDetailView(APIView):
 
 class ArtistAlbumView(APIView):
     def get(self, request, artist_id):
-        response = album_service.get_artist_albums(id=artist_id)
+        response = album_service.get_artist_albums(id=artist_id, request=request)
         return response
 
 
 class ManagerAlbumView(APIView):
     def get(self, request, manager_id):
-        response = album_service.get_manager_albums(manager_id=manager_id)
+        response = album_service.get_manager_albums(
+            manager_id=manager_id, request=request
+        )
         return response

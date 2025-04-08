@@ -23,7 +23,7 @@ class Artist(Profile):
     )
     first_release_year = models.PositiveIntegerField(
         default=current_year(),
-        validators=[MinValueValidator(1980), max_value_current_year],
+        validators=[MinValueValidator(1914), max_value_current_year],
     )
     no_of_albums_released = models.PositiveIntegerField(default=0)
     profile_image = models.ImageField(
