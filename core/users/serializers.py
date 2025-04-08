@@ -23,6 +23,17 @@ class UserOutputSerializer(serializers.Serializer):
     is_active = serializers.BooleanField()
 
 
+class UserProfileOutputSerializer(serializers.Serializer):
+    id = serializers.UUIDField(read_only=True)
+    user = UserSerializer()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    dob = serializers.DateTimeField()
+    gender = serializers.CharField()
+    address = serializers.CharField()
+    phone = serializers.CharField()
+
+
 class UserProfileSerializer(serializers.Serializer):
     id = serializers.UUIDField(read_only=True)
     user = UserOutputSerializer()

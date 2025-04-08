@@ -1,12 +1,13 @@
 import uuid
 
-from django.conf import settings
+from albums.models import Album
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.db import DatabaseError, connection
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
+from songs.models import Song
 from users.models.user import CustomUser as User
 from users.selectors import fetch_user
 from users.serializers import UserOutputSerializer
@@ -27,15 +28,6 @@ class ArtistService:
                 user_dicts = fetch_user(artist)
                 serializer = UserOutputSerializer(user_dicts)
                 artist["user"] = serializer.data
-
-                if artist.get("cover_image"):
-                    artist["cover_image"] = (
-                        f"{settings.MEDIA_URL}{artist['cover_image']}"
-                    )
-                if artist.get("profile_image"):
-                    artist["profile_image"] = (
-                        f"{settings.MEDIA_URL}{artist['profile_image']}"
-                    )
 
             serializer = ArtistSerializer(artist_dicts, many=True)
             artists = serializer.data
@@ -129,13 +121,18 @@ class ArtistService:
             profile_image_file = payload.get("profile_image")
 
             if manager_id:
-                check_manager = User.objects.filter(
-                    id=manager_id, role="artist_manager"
-                ).exists()
-                if not check_manager:
-                    raise ValidationError(
-                        "Invalid manager ID or the user is not a manager."
-                    )
+                try:
+                    user = User.objects.get(id=manager_id)
+
+                    if user.role == "super_admin":
+                        manager_id = None
+                    elif user.role != "artist_manager":
+                        raise ValidationError(
+                            "Invalid manager ID or the user is not a manager."
+                        )
+
+                except User.DoesNotExist:
+                    raise ValidationError("Invalid manager ID. User does not exist.")
 
             cover_image_path = None
             profile_image_path = None
@@ -341,6 +338,77 @@ class ArtistService:
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+    def soft_delete(self, id):
+        try:
+            artist = Artist.objects.get(id=id)
+            user = artist.user
+            user.is_active = False
+            user.save()
+
+            return success_response(
+                message="Artist deleted successfully",
+                status=status.HTTP_204_NO_CONTENT,
+            )
+
+        except DatabaseError as e:
+            return error_response(
+                error=str(e),
+                message="Database error",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def unban_artist(self, id):
+        try:
+            artist = Artist.objects.get(id=id)
+            user = artist.user
+
+            user.is_active = True
+            user.save()
+
+            return success_response(
+                message="Artist unbanned successfully",
+                status=status.HTTP_204_NO_CONTENT,
+            )
+
+        except DatabaseError as e:
+            return error_response(
+                error=str(e),
+                message="Database error",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def hard_delete(self, id):
+        try:
+            artist = Artist.objects.get(id=id)
+            user = artist.user
+
+            albums = Album.objects.filter(artist=id)
+            for album in albums:
+                Song.objects.filter(album=album.id).delete()
+
+            albums.delete()
+
+            artist.delete()
+            user.delete()
+
+            return success_response(
+                message="Artist and related data deleted successfully",
+                status=status.HTTP_204_NO_CONTENT,
+            )
+
+        except Artist.DoesNotExist:
+            return error_response(
+                message="Artist not found",
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        except DatabaseError as e:
+            return error_response(
+                error=str(e),
+                message="Database error",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
     def delete(self, id):
         try:
             with connection.cursor() as c:
@@ -356,7 +424,6 @@ class ArtistService:
                         message="Artist does not exist",
                         status=status.HTTP_404_NOT_FOUND,
                     )
-
             return success_response(
                 message="Artist deleted successfully",
                 status=status.HTTP_204_NO_CONTENT,

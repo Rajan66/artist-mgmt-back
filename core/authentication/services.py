@@ -21,6 +21,12 @@ class AuthService:
             )
 
         user = serializer.validated_data["user"]
+        if not user.is_active:
+            raise CustomAuthenticationException(
+                detail="User has been blocked or removed.",
+                error_type="Authentication error",
+                code=status.HTTP_403_FORBIDDEN,
+            )
 
         tokens = jwt_auth.get_tokens(user)
         data = {

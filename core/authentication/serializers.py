@@ -9,6 +9,7 @@ class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
     role = serializers.CharField(read_only=True)
+    is_active = serializers.BooleanField(read_only=True)
 
     def validate(self, attrs):
         email = attrs["email"]

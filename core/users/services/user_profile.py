@@ -3,8 +3,14 @@ import uuid
 from django.db import DatabaseError, connection
 from django.utils import timezone
 from rest_framework import status
+from users.models.user_profile import UserProfile
 from users.selectors import fetch_user, fetch_user_profiles
-from users.serializers import UserOutputSerializer, UserProfileSerializer
+from users.serializers import (
+    UserOutputSerializer,
+    UserProfileOutputSerializer,
+    UserProfileSerializer,
+    UserSerializer,
+)
 
 from core.utils.response import error_response, success_response
 
@@ -58,10 +64,10 @@ class UserProfileService:
 
                 columns = [col[0] for col in c.description]
                 user_dicts = dict(zip(columns, result))
-                serializer = UserOutputSerializer(user_dicts)
+                serializer = UserSerializer(user_dicts)
                 profile_dicts["user"] = serializer.data
 
-            serializer = UserProfileSerializer(profile_dicts)
+            serializer = UserProfileOutputSerializer(profile_dicts)
             profile = serializer.data
 
             return success_response(
@@ -90,7 +96,6 @@ class UserProfileService:
             created_at = payload.get("created_at", timezone.now())
             updated_at = timezone.now()
 
-            print(payload)
             with connection.cursor() as c:
                 c.execute(
                     """INSERT INTO users_user_profile (id, first_name, last_name, dob, gender, address, phone, created_at, updated_at, user_id)
@@ -228,6 +233,64 @@ class UserProfileService:
 
             return success_response(
                 message="User profile deleted successfully",
+                status=status.HTTP_204_NO_CONTENT,
+            )
+
+        except DatabaseError as e:
+            return error_response(
+                error=str(e),
+                message="Database error",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def soft_delete(self, id):
+        try:
+            manager = UserProfile.objects.get(id=id)
+            user = manager.user
+            user.is_active = False
+            user.save()
+
+            return success_response(
+                message="Manager deleted successfully",
+                status=status.HTTP_204_NO_CONTENT,
+            )
+
+        except DatabaseError as e:
+            return error_response(
+                error=str(e),
+                message="Database error",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def hard_delete(self, id):
+        try:
+            manager = UserProfile.objects.get(id=id)
+            user = manager.user
+
+            manager.delete()
+            user.delete()
+
+            return success_response(
+                message="Manager deleted successfully",
+                status=status.HTTP_204_NO_CONTENT,
+            )
+
+        except DatabaseError as e:
+            return error_response(
+                error=str(e),
+                message="Database error",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def unban_user(self, id):
+        try:
+            manager = UserProfile.objects.get(id=id)
+            user = manager.user
+            user.is_active = True
+            user.save()
+
+            return success_response(
+                message="Manager unbanned successfully",
                 status=status.HTTP_204_NO_CONTENT,
             )
 
