@@ -2,11 +2,11 @@ from datetime import timedelta
 
 from albums.models.album import Album
 from artists.models import Artist
-from django.db.models import Count
-from django.db.models.functions import TruncMonth
+from django.db.models import Count, F
 from django.utils import timezone
 from rest_framework import status
 from songs.models import Song
+from songs.serializers import SongOutputSerializer
 from users.models.user import CustomUser as User
 
 from core.utils.response import error_response, success_response
@@ -116,93 +116,107 @@ class StatService:
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    def get_monthly_songs(self):
-        try:
-            monthly_songs = (
-                Song.objects.annotate(month=TruncMonth("release_date"))
-                .values("month")
-                .annotate(song_count=Count("id"))
-                .order_by("month")
-            )
+    def get_manager_genre(self, manager_id):
+        artists = Artist.objects.filter(manager=manager_id).values_list("id", flat=True)
 
-            month_names = [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-                "Sep",
-                "Oct",
-                "Nov",
-                "Dec",
-            ]
+        stats = (
+            Song.objects.filter(album__artist__in=artists)
+            .values("genre")
+            .annotate(values=Count("genre"))
+        )
 
-            data = [
-                {
-                    "month": month_names[month["month"].month - 1],
-                    "songs": month["song_count"],
-                }
-                for month in monthly_songs
-            ]
+        return success_response(
+            stats,
+            message="Manager genre stats retrieved successfully",
+            status=status.HTTP_200_OK,
+        )
 
-            return success_response(
-                data,
-                message="Monthly songs retrieved successfully",
-                status=status.HTTP_200_OK,
-            )
-        except Exception as e:
-            return error_response(
-                error=str(e),
-                message="Failed to retrieve monthly songs",
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+    def get_all_genre(self):
+        stats = Song.objects.all().values("genre").annotate(values=Count("genre"))
 
-    def get_manager_monthly_songs(self, manager_id):
-        try:
-            managed_artists = Artist.objects.filter(manager_id=manager_id)
+        return success_response(
+            stats,
+            message="All genre stats retrieved successfully",
+            status=status.HTTP_200_OK,
+        )
 
-            monthly_songs = (
-                Song.objects.filter(album__artist__in=managed_artists)
-                .annotate(month=TruncMonth("release_date"))
-                .values("month")
-                .annotate(song_count=Count("id"))
-                .order_by("month")
-            )
+    def get_manager_artist_songs(self, manager_id):
+        stats = (
+            Song.objects.filter(album__artist__manager=manager_id)
+            .values(artist=F("album__artist__name"))
+            .annotate(songs=Count("id"))
+        )
+        return success_response(
+            stats,
+            message="All genre stats retrieved successfully",
+            status=status.HTTP_200_OK,
+        )
 
-            month_names = [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-                "Sep",
-                "Oct",
-                "Nov",
-                "Dec",
-            ]
+    def get_all_artist_songs(self):
+        stats = Song.objects.values(artist=F("album__artist__name")).annotate(
+            songs=Count("id")
+        )
 
-            data = [
-                {
-                    "month": month_names[month["month"].month - 1],
-                    "songs": month["song_count"],
-                }
-                for month in monthly_songs
-            ]
+        return success_response(
+            stats,
+            message="All genre stats retrieved successfully",
+            status=status.HTTP_200_OK,
+        )
 
-            return success_response(
-                data,
-                message="Manager's monthly songs retrieved successfully",
-                status=status.HTTP_200_OK,
-            )
-        except Exception as e:
-            return error_response(
-                error=str(e),
-                message="Failed to retrieve manager's monthly songs",
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+    def get_manager_artist_albums(self, manager_id):
+        stats = (
+            Album.objects.filter(artist__manager=manager_id)
+            .values(artist_name=F("artist__name"))
+            .annotate(albums=Count("id"))
+        )
+
+        return success_response(
+            stats,
+            message="All genre stats retrieved successfully",
+            status=status.HTTP_200_OK,
+        )
+
+    def get_all_artist_albums(self):
+        stats = Album.objects.values(artist_name=F("artist__name")).annotate(
+            albums=Count("id")
+        )
+
+        return success_response(
+            stats,
+            message="Albums per artist retrieved successfully",
+            status=status.HTTP_200_OK,
+        )
+
+    def get_manager_recent_songs(self, manager_id):
+        one_week = timezone.now() - timedelta(days=7)
+        songs = (
+            Song.objects.filter(created_at__gte=one_week)
+            .select_related("album")
+            .filter(album__artist__manager=manager_id)
+            .prefetch_related("album__artist")
+            .order_by("-created_at")
+        )
+        serializer = SongOutputSerializer(songs, many=True)
+        stats = serializer.data
+
+        return success_response(
+            stats,
+            message="Manager recent songs retrieved successfully",
+            status=status.HTTP_200_OK,
+        )
+
+    def get_all_recent_songs(self):
+        one_week = timezone.now() - timedelta(days=7)
+        songs = (
+            Song.objects.filter(created_at__gte=one_week)
+            .select_related("album")
+            .prefetch_related("album__artist")
+            .order_by("-created_at")
+        )
+        serializer = SongOutputSerializer(songs, many=True)
+        stats = serializer.data
+        return success_response(
+            stats,
+            message="Recent songs retrieved successfully",
+            status=status.HTTP_200_OK,
+        )
