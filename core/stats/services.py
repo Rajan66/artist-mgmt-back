@@ -194,7 +194,7 @@ class StatService:
             .select_related("album")
             .filter(album__artist__manager=manager_id)
             .prefetch_related("album__artist")
-            .order_by("-created_at")
+            .order_by("-created_at")[:5]
         )
         serializer = SongOutputSerializer(songs, many=True)
         stats = serializer.data
@@ -211,7 +211,7 @@ class StatService:
             Song.objects.filter(created_at__gte=one_week)
             .select_related("album")
             .prefetch_related("album__artist")
-            .order_by("-created_at")
+            .order_by("-created_at")[:5]
         )
         serializer = SongOutputSerializer(songs, many=True)
         stats = serializer.data
