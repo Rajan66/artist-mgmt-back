@@ -6,6 +6,7 @@ from albums.serializers.album import (
     AlbumFetchSerializer,
     AlbumOutputSerializer,
 )
+from albums.validators import validate_release
 from artists.models import Artist
 from artists.selectors import fetch_artist
 from artists.serializers import AlbumArtistSerializer
@@ -21,7 +22,7 @@ from core.utils.response import error_response, success_response
 
 
 class AlbumService:
-    def get_albums(self):
+    def get_albums(self, request):
         try:
             albums_dicts = fetch_albums()
             if albums_dicts == []:
@@ -55,6 +56,7 @@ class AlbumService:
             data=albums,
             message="Albums retrieved successfully",
             status=status.HTTP_200_OK,
+            request=request,
         )
 
     def get_album(self, album_id):
@@ -87,7 +89,7 @@ class AlbumService:
             status=status.HTTP_200_OK,
         )
 
-    def get_artist_albums(self, id):
+    def get_artist_albums(self, id, request):
         try:
             filtered_albums = Album.objects.filter(artist=id)
 
@@ -105,6 +107,7 @@ class AlbumService:
             data=albums,
             message="Albums retrieved successfully",
             status=status.HTTP_200_OK,
+            request=request,
         )
 
     def create(self, payload):
@@ -119,6 +122,8 @@ class AlbumService:
                 album_type = payload.get("album_type", "single")
                 created_at = timezone.now()
                 updated_at = timezone.now()
+
+                validate_release(artist_id, release_date)
 
                 try:
                     uuid.UUID(artist_id, version=4)
@@ -218,8 +223,9 @@ class AlbumService:
                 album_type = payload.get("album_type", old_album.get("album_type"))
                 created_at = old_album.get("created_at")
                 updated_at = timezone.now()
-                print(cover_image_file)
-                print(cover_image_path)
+
+                validate_release(artist_id, release_date)
+
                 try:
                     uuid.UUID(artist_id, version=4)
                 except ValueError:
@@ -306,7 +312,7 @@ class AlbumService:
             )
         return success_response(
             data=album,
-            message="Album created successfully",
+            message="Album updated successfully",
             status=status.HTTP_200_OK,
         )
 
@@ -355,7 +361,7 @@ class AlbumService:
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    def get_manager_albums(self, manager_id):
+    def get_manager_albums(self, manager_id, request):
         try:
             filtered_albums = Album.objects.filter(
                 artist__manager=manager_id
@@ -367,6 +373,7 @@ class AlbumService:
                 data=albums,
                 message="Albums retrieved successfully",
                 status=status.HTTP_200_OK,
+                request=request,
             )
 
         except Exception as e:
@@ -374,4 +381,5 @@ class AlbumService:
                 error=str(e),
                 message="Failed to fetch albums",
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                request=request,
             )

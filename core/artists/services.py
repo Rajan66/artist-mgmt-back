@@ -15,12 +15,13 @@ from users.serializers import UserOutputSerializer
 from artists.models import Artist
 from artists.selectors import fetch_artists
 from artists.serializers import ArtistSerializer
+from artists.validators import validate_debut
 from core.utils.exceptions import CustomAPIException
 from core.utils.response import error_response, success_response
 
 
 class ArtistService:
-    def get_artists(self):
+    def get_artists(self, request):
         try:
             artist_dicts = fetch_artists()
 
@@ -36,6 +37,7 @@ class ArtistService:
                 data=artists,
                 message="Artists retrieved successfully",
                 status=status.HTTP_200_OK,
+                request=request,
             )
 
         except Exception as e:
@@ -119,6 +121,9 @@ class ArtistService:
             updated_at = timezone.now()
             cover_image_file = payload.get("cover_image")
             profile_image_file = payload.get("profile_image")
+
+            if first_release_year != 0:
+                validate_debut(first_release_year, dob)
 
             if manager_id:
                 try:
@@ -260,6 +265,9 @@ class ArtistService:
                 cover_image_path = artist_profile.get("cover_image")
                 profile_image_path = artist_profile.get("profile_image")
 
+                if first_release_year != 0:
+                    validate_debut(first_release_year, dob)
+
                 if (
                     cover_image_file
                     and cover_image_file != {}
@@ -315,8 +323,6 @@ class ArtistService:
                     columns.append(col[0])
 
             artist_dict = dict(zip(columns, result))
-
-            print(artist_dict)
 
             user_dict = fetch_user(artist_dict)
             serializer = UserOutputSerializer(user_dict)
@@ -436,7 +442,7 @@ class ArtistService:
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    def get_manager_artists(self, manager_id):
+    def get_manager_artists(self, manager_id, request):
         try:
             filtered_artists = Artist.objects.filter(manager=manager_id)
 
@@ -446,6 +452,7 @@ class ArtistService:
                 data=artists,
                 message="Artists retrieved successfully",
                 status=status.HTTP_200_OK,
+                request=request,
             )
 
         except Exception as e:

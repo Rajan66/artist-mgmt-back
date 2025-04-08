@@ -16,7 +16,7 @@ from core.utils.response import error_response, success_response
 
 
 class UserProfileService:
-    def get_profiles(self):
+    def get_profiles(self, request):
         try:
             profile_dicts = fetch_user_profiles()
 
@@ -32,6 +32,7 @@ class UserProfileService:
                 data=profiles,
                 message="User profiles found successfully",
                 status=status.HTTP_200_OK,
+                request=request,
             )
 
         except Exception as e:
