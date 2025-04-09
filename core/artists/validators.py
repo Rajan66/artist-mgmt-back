@@ -15,6 +15,6 @@ def validate_debut(first_release_year, dob):
         age_at_debut = int(first_release_year) - birth_year
 
         if age_at_debut < 14:
-            raise ValidationError("Artist should be at least 14 years old at debut.")
+            raise ValidationError("Artist should be at least 14 years old.")
     except ValueError:
         raise ValidationError("Date of birth must be in YYYY-MM-DD format.")

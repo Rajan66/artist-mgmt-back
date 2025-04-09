@@ -6,6 +6,7 @@ from artists.models import Artist
 from django.http import HttpResponse, JsonResponse
 from rest_framework import status
 from songs.models import Song
+from songs.validators import validate_release
 
 from core.utils.response import error_response, success_response
 
@@ -18,9 +19,13 @@ class CSVService:
             .select_related("album__artist__user")
         )
 
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = 'attachment; filename="all_songs.csv"'
-        writer = csv.writer(response)
+        response = HttpResponse(content_type="text/csv")  # content-type
+        response["Content-Disposition"] = (
+            'attachment; filename="all_songs.csv"'  # tells browser the file should be downloaded not displayed
+        )
+        writer = csv.writer(
+            response
+        )  # create a writer instance and write in http response stream
 
         writer.writerow(
             [
@@ -160,12 +165,29 @@ class CSVService:
                     )
                     continue
 
+                validate_release(id=album.id, release_date=song_release_date)
                 Song.objects.create(
                     title=song_title,
                     genre=genre,
                     release_date=song_release_date,
                     album=album,
                 )
+
+                song_count = Song.objects.filter(album=album.id).count()
+
+                if song_count == 1 or song_count == 0:
+                    album.album_type = "single"
+                    album.total_tracks = song_count
+
+                elif song_count > 1 and song_count < 5:
+                    album.album_type = "ep"
+                    album.total_tracks = song_count
+
+                elif song_count > 4:
+                    album.album_type = "album"
+                    album.total_tracks = song_count
+
+                album.save()
 
             except Exception as e:
                 error_messages.append(f"Error processing row: {row}. Error: {str(e)}")
@@ -220,12 +242,29 @@ class CSVService:
                     )
                     continue
 
+                validate_release(id=album.id, release_date=song_release_date)
                 Song.objects.create(
                     title=song_title,
                     genre=genre,
                     release_date=song_release_date,
                     album=album,
                 )
+
+                song_count = Song.objects.filter(album=album.id).count()
+
+                if song_count == 1 or song_count == 0:
+                    album.album_type = "single"
+                    album.total_tracks = song_count
+
+                elif song_count > 1 and song_count < 5:
+                    album.album_type = "ep"
+                    album.total_tracks = song_count
+
+                elif song_count > 4:
+                    album.album_type = "album"
+                    album.total_tracks = song_count
+
+                album.save()
 
             except Exception as e:
                 error_messages.append(f"Error processing row: {row}. Error: {str(e)}")
@@ -271,12 +310,29 @@ class CSVService:
                     )
                     continue
 
+                validate_release(id=album.id, release_date=song_release_date)
                 Song.objects.create(
                     title=song_title,
                     genre=genre,
                     release_date=song_release_date,
                     album=album,
                 )
+
+                song_count = Song.objects.filter(album=album.id).count()
+
+                if song_count == 1 or song_count == 0:
+                    album.album_type = "single"
+                    album.total_tracks = song_count
+
+                elif song_count > 1 and song_count < 5:
+                    album.album_type = "ep"
+                    album.total_tracks = song_count
+
+                elif song_count > 4:
+                    album.album_type = "album"
+                    album.total_tracks = song_count
+
+                album.save()
 
             except Exception as e:
                 error_messages.append(f"Error processing row: {row}. Error: {str(e)}")

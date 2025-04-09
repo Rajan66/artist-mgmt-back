@@ -51,3 +51,27 @@ class TokenBlacklistView(APIView):
     def post(self, request):
         response = auth_service.blacklist_token(request)
         return response
+
+
+class ChangePasswordView(APIView):
+    def post(self, request):
+        response = auth_service.change_pw(payload=request.data)
+        return response
+
+
+class CheckAndSendMail(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        response = auth_service.forgot_pw_check_user(payload=request.data)
+        return response
+
+
+class ForgotPasswordView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        response = auth_service.forgot_pw(payload=request.data)
+        return response
