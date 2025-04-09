@@ -19,9 +19,13 @@ class CSVService:
             .select_related("album__artist__user")
         )
 
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = 'attachment; filename="all_songs.csv"'
-        writer = csv.writer(response)
+        response = HttpResponse(content_type="text/csv")  # content-type
+        response["Content-Disposition"] = (
+            'attachment; filename="all_songs.csv"'  # tells browser the file should be downloaded not displayed
+        )
+        writer = csv.writer(
+            response
+        )  # create a writer instance and write in http response stream
 
         writer.writerow(
             [
