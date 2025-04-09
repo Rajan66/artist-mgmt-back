@@ -178,7 +178,8 @@ class AlbumService:
             album_serializer = AlbumFetchSerializer(album_dict)
             album = album_serializer.data
 
-            artist.no_of_albums_released += 1
+            album_count = Album.objects.filter(artist=artist.id).count()
+            artist.no_of_albums_released = album_count
             artist.save()
 
         except ValueError as e:
@@ -346,7 +347,8 @@ class AlbumService:
                     )
 
             artist = Artist.objects.get(id=artist_id)
-            artist.no_of_albums_released = max(0, artist.no_of_albums_released - 1)
+            album_count = Album.objects.filter(artist=artist.id).count()
+            artist.no_of_albums_released = album_count
             artist.save()
 
             return success_response(

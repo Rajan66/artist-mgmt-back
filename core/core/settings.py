@@ -135,3 +135,10 @@ REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "core.utils.utils.custom_exception_handler",
     "NON_FIELD_ERRORS_KEY": "errors",
 }
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_USE_TLS = True
+EMAIL_PORT = env("EMAIL_PORT")
+EMAIL_HOST_USER = env("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
